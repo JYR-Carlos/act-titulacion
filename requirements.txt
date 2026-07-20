@@ -1,0 +1,24 @@
+# Pipeline de IA / datos LSCh-MR (parte de Juan).
+# Verificado contra el entorno del equipo: Python 3.12 + numpy 2.x.
+#
+# El pipeline está separado en dos grupos: la CAPTURA/DATASET/INFERENCIA no
+# necesita TensorFlow; solo el ENTRENAMIENTO y la EXPORTACIÓN lo requieren.
+
+# --- Núcleo: captura, dataset, inferencia (no requiere TensorFlow) -----------
+numpy>=1.26
+opencv-python>=4.8
+mediapipe>=0.10.14         # Tasks API / HandLandmarker (NO la API legacy)
+onnx>=1.16
+onnxruntime>=1.19
+scikit-learn>=1.4
+matplotlib>=3.8
+
+# --- Entrenamiento + exportación a ONNX (instalar cuando se vaya a entrenar) --
+# TensorFlow 2.16+ soporta Python 3.12 y numpy 2. Trae Keras 3 por defecto; el
+# ModelExporter maneja tanto Keras 3 como Keras 2 y ofrece varias rutas de
+# exportación (ver lsch_mr/model_exporter.py).
+tensorflow>=2.16
+tf2onnx>=1.16
+
+# --- Desarrollo / pruebas ----------------------------------------------------
+pytest>=8.0

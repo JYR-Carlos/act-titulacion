@@ -1,0 +1,20 @@
+# Modelo de MediaPipe (se descarga con descargar_modelo.py)
+models/*.task
+
+# Datos y artefactos generados
+data/raw/*.csv
+data/processed/*.npz
+# datasets de referencia descargados (SWL-LSE, LSA64, ...)
+data/external/
+outputs/models/*.keras
+outputs/models/*.onnx
+outputs/models/*.json
+outputs/reports/*
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/

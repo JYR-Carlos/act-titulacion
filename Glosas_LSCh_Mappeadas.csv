@@ -1,0 +1,11 @@
+id,glosa,categoria,notas
+0,HOLA,saludo,Seña de saludo inicial
+1,GRACIAS,cortesia,Agradecimiento
+2,POR-FAVOR,cortesia,Petición cortés
+3,AYUDA,atencion,Solicitud de asistencia
+4,SI,respuesta,Afirmación
+5,NO,respuesta,Negación
+6,DOCUMENTO,tramite,Documento / carné / papeles
+7,ESPERAR,tramite,Indicación de esperar turno
+8,NOMBRE,identidad,Preguntar/indicar el nombre
+9,ATENCION,atencion,Servicio de atención al público
