@@ -58,8 +58,16 @@ class DatasetRecorder:
         guardadas = {g: 0 for g in self.glosas}
 
         detector = RestStateDetector()
+        # running_mode="image" explícito: este grabador produce corpus, y el
+        # corpus existente se extrajo en IMAGE. El default de la clase es "video"
+        # y grabar con él daría muestras de otra distribución que las de LSA64.
+        # Cuesta algo de estabilidad en la segmentación en vivo —IMAGE redetecta
+        # la palma en cada frame, así que da más jitter y más huecos— pero esa
+        # inestabilidad la va a tener igual el runtime de Unity, que también va en
+        # IMAGE. Grabar en un modo más benévolo que el de servicio maquillaría el
+        # problema en vez de resolverlo. Ver INTEGRACION_UNITY.md sección 7.
         with FuenteVideo(self.fuente, espejo=self.espejo).abrir() as fuente, \
-                HandTrackingProvider(num_hands=2) as provider, \
+                HandTrackingProvider(num_hands=2, running_mode="image") as provider, \
                 EscritorCSV(csv_path) as escritor:
             print(f"[DatasetRecorder] Sesión {sesion}. Guardando en {csv_path}")
             self._imprimir_ayuda()

@@ -38,6 +38,35 @@ from lsch_mr.rest_state_detector import RestStateDetector
 from lsch_mr.sign_classifier import SignClassifier
 from lsch_mr.tipos import SignEventType
 
+# Traducción SOLO para lo que se dibuja en pantalla. El clasificador sigue
+# devolviendo las glosas de LSA64 en inglés (el corpus del MVP: no hay
+# vocabulario LSCh, ver CONTEXTO_UNITY.md sección 2) y eso no cambia aquí; esto
+# es la "decisión de presentación" que esa misma sección deja abierta, no un
+# renombrado de las clases del modelo. Mantener sincronizado a mano con la
+# tabla de GLOSARIO_SENAS_MODELO.md.
+ETIQUETAS_ES = {
+    "Accept": "Aceptar",
+    "Appear": "Aparecer",
+    "Call": "Llamar",
+    "Give": "Dar",
+    "Help": "Ayuda",
+    "Last_name": "Apellido",
+    "Name": "Nombre",
+    "None": "Ninguno",
+    "Patience": "Paciencia",
+    "Thanks": "Gracias",
+}
+
+
+def _es(label: str) -> str:
+    """Traduce una glosa del modelo a español para mostrarla en pantalla.
+
+    Si aparece una clase que no está en el diccionario (p. ej. tras
+    reentrenar con otro vocabulario), muestra la glosa cruda en vez de
+    fallar — mejor un rótulo en inglés que una excepción en plena demo.
+    """
+    return ETIQUETAS_ES.get(label, label)
+
 
 @dataclass
 class Medicion:
@@ -76,7 +105,9 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Demo end-to-end en PC (CU-01/CU-03)")
     ap.add_argument("--fuente", default="0",
                     help="índice de webcam o URL del teléfono (IP Webcam)")
-    ap.add_argument("--sin-espejo", action="store_true")
+    ap.add_argument("--sin-espejo", action="store_true",
+                    help="no voltear la vista en pantalla (solo afecta al "
+                         "renderizado; el modelo nunca ve el frame volteado)")
     ap.add_argument("--conf", type=float, default=config.CONF_THRESHOLD)
     args = ap.parse_args()
 
@@ -92,8 +123,20 @@ def main() -> int:
     ultimo = Medicion()
     periodo = _PeriodoFrame()
 
-    with FuenteVideo(parse_fuente(args.fuente), espejo=not args.sin_espejo).abrir() as fv, \
-            HandTrackingProvider(num_hands=2) as provider:
+    # running_mode="image" explícito: esta demo alimenta a `modelo.onnx`, que se
+    # entrenó con keypoints extraídos en IMAGE. Con el default ("video") el
+    # modelo recibiría otra distribución y acertaría menos sin dar ningún error
+    # — el mismo train/serve skew que el runtime de Unity tiene que evitar.
+    # Decisión cerrada: INTEGRACION_UNITY.md sección 7.
+    #
+    # espejo=False SIEMPRE en la fuente: el corpus se extrajo sin voltear
+    # (extraer_lote.py), así que el frame que alimenta al modelo tiene que ir
+    # igual. El espejo de UX se aplica más abajo, solo sobre la copia que se
+    # dibuja en pantalla — nunca sobre la que entra a `provider.getFrame`.
+    # Ver INTEGRACION_UNITY.md sección 7.6, trampa 7.
+    mostrar_espejo = not args.sin_espejo
+    with FuenteVideo(parse_fuente(args.fuente), espejo=False).abrir() as fv, \
+            HandTrackingProvider(num_hands=2, running_mode="image") as provider:
         for frame_bgr, ts_ms in fv.frames():
             t_captura = time.perf_counter()
             periodo.update(ts_ms)
@@ -111,12 +154,15 @@ def main() -> int:
                 ultimo.latencia_inferencia_ms = (time.perf_counter() - t0) * 1000.0
                 ultimo.label, ultimo.conf = res.label, res.confidence
                 if res.in_vocab:
-                    composer.appendWord(res.label)
+                    composer.appendWord(_es(res.label))
                 recien_clasificada = True
 
             composer.tick()   # cierre autónomo del mensaje al expirar el timeout
-            _overlay(cv2, frame_bgr, detector, composer, ultimo)
-            cv2.imshow("demo_vivo — LSCh-MR", frame_bgr)
+            # Volteo SOLO de la copia que se muestra (UX); `frame_bgr` sin
+            # voltear ya se usó arriba para la inferencia y no se toca aquí.
+            frame_mostrado = cv2.flip(frame_bgr, 1) if mostrar_espejo else frame_bgr
+            _overlay(cv2, frame_mostrado, detector, composer, ultimo)
+            cv2.imshow("demo_vivo — LSCh-MR", frame_mostrado)
 
             if recien_clasificada:
                 # El subtítulo ya está dibujado: aquí termina la cadena que mide
@@ -128,7 +174,8 @@ def main() -> int:
                 ultimo.retardo_segmentacion_ms = detector.frames_fin * periodo.ms()
                 ultimo.latencia_e2e_ms = ultimo.retardo_segmentacion_ms + proceso_ms
                 aviso = "  [!] EXCEDE EL UMBRAL" if ultimo.excede_umbral else ""
-                print(f"  -> {ultimo.label:>14}  conf={ultimo.conf:.2f}  "
+                print(f"  -> {ultimo.label:>14} ({_es(ultimo.label)})  "
+                      f"conf={ultimo.conf:.2f}  "
                       f"inferencia={ultimo.latencia_inferencia_ms:.1f} ms  "
                       f"e2e={ultimo.latencia_e2e_ms:.0f} ms "
                       f"(<= {config.LATENCIA_MAX_MS:.0f} ms){aviso}")
@@ -149,7 +196,7 @@ def _overlay(cv2, frame, detector, composer, ultimo: Medicion):
     estado = "CAPTURANDO" if detector.capturando else "reposo"
     color = (0, 0, 255) if detector.capturando else (0, 180, 0)
     if ultimo.label:
-        txt = (f"{ultimo.label}  ({ultimo.conf:.2f})"
+        txt = (f"{_es(ultimo.label)}  ({ultimo.conf:.2f})"
                if ultimo.label != "<desconocida>" else "fuera de vocabulario")
         cv2.putText(frame, txt, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.0,
                     (0, 255, 255), 2)

@@ -10,6 +10,40 @@ En el sistema final este provider se reemplaza por el Meta XR SDK; el contrato
 
 Requiere el modelo `hand_landmarker.task` en `models/` (no viene con
 `pip install mediapipe`). Usa `descargar_modelo.py` para obtenerlo.
+
+======================================================================
+running_mode OFICIAL DEL PROYECTO: "image"   (decisión del 2026-07-26)
+======================================================================
+Vale para Python y para el port a Unity (plugin de homuler). NO es un
+detalle de implementación: es parte del contrato con el modelo.
+
+Por qué: el corpus LSA64 del que salió `modelo.onnx` se extrajo con
+`extraer_lote.py`, que pasa `running_mode="image"`. El modo de servicio
+tiene que ser el modo de extracción — si no, el modelo recibe keypoints
+de otra distribución y falla en silencio (train/serve skew).
+
+Medido sobre el mismo vídeo del corpus, IMAGE vs VIDEO divergen hasta
+1.79 en el NormVector, cinco órdenes de magnitud por encima de la
+tolerancia con la que se valida el port (1e-5), y eligen distinta mano
+dominante en 16 de 18 frames. No son intercambiables.
+
+Ojo con el default de esta clase: sigue siendo "video", que NO es el modo
+oficial. Se mantiene solo para no romper llamadas existentes que exploran
+tracking en vivo sin producir datos ni clasificar. Los cuatro usos reales
+del proyecto pasan running_mode="image" explícitamente:
+
+    extraer_lote.py        corpus por lotes (es el que extrajo LSA64)
+    extraer_keypoints.py   corpus desde webcam o archivo
+    DatasetRecorder        corpus grabado en sesión
+    demo_vivo.py           demo end-to-end, alimenta modelo.onnx
+
+Si añades un uso nuevo que grabe corpus o alimente al modelo, pásalo
+también. No confíes en el default.
+
+Especificación completa, evidencia y qué reabriría la decisión:
+INTEGRACION_UNITY.md sección 7. Vectores de referencia frame a frame:
+`generar_secuencia_dorada.py` -> integracion/secuencia_dorada.json.
+LIVE_STREAM no se usa nunca (asíncrono: descarta frames).
 """
 from __future__ import annotations
 
@@ -44,10 +78,13 @@ class HandTrackingProvider:
                 "o manualmente desde el catálogo de MediaPipe HandLandmarker."
             )
 
-        # "video": stream en vivo con tracking temporal (webcam/teléfono).
-        # "image": cada frame independiente; ideal para extracción por lotes de
-        #          vídeos (sin exigir timestamps, sin arrastrar tracking entre
-        #          archivos).
+        # "image": cada frame independiente. MODO OFICIAL DEL PROYECTO (ver el
+        #          docstring): es el que extrajo el corpus, así que es el único
+        #          coherente con `modelo.onnx`. Ignora el timestamp.
+        # "video": arrastra el ROI del frame anterior en vez de redetectar la
+        #          palma. Detecta más manos y con menos jitter, pero produce
+        #          keypoints de OTRA distribución que la del entrenamiento.
+        #          Solo para capturar en vivo sin alimentar al modelo.
         self._modo = running_mode.lower()
         rm = (vision.RunningMode.IMAGE if self._modo == "image"
               else vision.RunningMode.VIDEO)
@@ -98,6 +135,10 @@ class HandTrackingProvider:
                 if res.handedness and i < len(res.handedness):
                     cat = res.handedness[i][0]
                     lado, score = cat.category_name, float(cat.score)
+                # Se guarda el timestamp ORIGINAL, no el `ts` corregido por el
+                # guard de arriba: el HandFrame documenta cuándo se capturó el
+                # frame, no qué reloj vio MediaPipe. Los dos divergen en cuanto
+                # el guard se dispara (solo en modo "video").
                 hands.append(HandFrame(landmarks=pts, hand=lado, score=score,
                                        timestamp_ms=int(timestamp_ms)))
 

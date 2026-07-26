@@ -70,11 +70,12 @@ def main() -> int:
         escritor = EscritorCSV(salida)
         print(f"[extraer] CSV -> {salida}")
 
-    # webcam/teléfono en vivo -> modo VIDEO (tracking temporal);
-    # archivo de vídeo en batch -> modo IMAGE (frames independientes).
-    provider = HandTrackingProvider(
-        num_hands=args.num_hands,
-        running_mode="video" if args.modo == "webcam" else "image")
+    # running_mode="image" SIEMPRE, también en webcam: este script escribe CSV
+    # crudo del corpus, y el corpus se extrajo en IMAGE (extraer_lote.py). Mezclar
+    # modos daría muestras de dos distribuciones distintas dentro del mismo
+    # dataset, que es peor que equivocarse de modo de forma consistente.
+    # Decisión cerrada: INTEGRACION_UNITY.md sección 7.
+    provider = HandTrackingProvider(num_hands=args.num_hands, running_mode="image")
     frame_idx = 0
     n_filas = 0
     try:

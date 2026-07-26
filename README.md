@@ -175,15 +175,29 @@ presupuesto de 500 ms.
 ### 6) Preparar la integración con Unity
 
 ```powershell
+# Capa 2: mano sintética, un frame por caso.
 python generar_vectores_dorados.py             # genera integracion/vectores_dorados.json
 python generar_vectores_dorados.py --verificar # comprueba que sigue vigente
+
+# Capa 1 + 2: seña real del corpus, 18 frames consecutivos en movimiento.
+python generar_secuencia_dorada.py             # genera integracion/secuencia_dorada.{json,csv}
+python generar_secuencia_dorada.py --verificar # re-extrae el vídeo y compara
 ```
-Congela la salida de referencia del preprocesamiento para que el port a C# pueda
-verificarse caso por caso. Ver **`INTEGRACION_UNITY.md`** para la especificación
-completa y el código C# de referencia.
+Congelan la salida de referencia para que el port a C# pueda verificarse caso por
+caso. El segundo cubre lo que el primero no puede: que Unity extraiga los
+keypoints igual que nosotros, no solo que los normalice igual. Ver
+**`INTEGRACION_UNITY.md`** para la especificación completa y el código C# de
+referencia.
 
 > Si alguien cambia el preprocesamiento en Python, `--verificar` falla: el port en
 > C# queda invalidado y hay que regenerar el JSON y avisar al equipo de Unity.
+
+> **El `running_mode` del `HandLandmarker` es `IMAGE`** — en Python y en Unity.
+> Es el modo con el que se extrajo el corpus, así que es el único coherente con
+> `modelo.onnx`; con `VIDEO` los keypoints divergen hasta 1.79 en el `NormVector`
+> (la tolerancia del port es 1e-5). Decisión cerrada: `INTEGRACION_UNITY.md`
+> sección 7. Ojo: el default de `HandTrackingProvider` es `"video"`, para la
+> captura en vivo; cualquier cosa que alimente al modelo pasa `"image"` explícito.
 
 ---
 
@@ -346,7 +360,9 @@ entrenar.py              CLI entrenamiento
 exportar_onnx.py         CLI exportación ONNX
 demo_vivo.py             CLI validación end-to-end en PC (orquestador de referencia)
 generar_vectores_dorados.py  vectores de prueba para el port del preproceso a C#
+generar_secuencia_dorada.py  vectores de prueba de una secuencia real (Capa 1+2)
 integracion/             artefactos para el repo de Unity (vectores dorados)
 INTEGRACION_UNITY.md     contrato entre repos + spec del port a C#
+GLOSARIO_SENAS_MODELO.md significado + vídeo de referencia de las 10 glosas del modelo
 tests/                   pruebas unitarias
 ```
