@@ -88,6 +88,14 @@ ENTRENAMIENTO_LR = 1e-3
 ENTRENAMIENTO_VAL_SPLIT = 0.2
 SEMILLA = 42
 
+# Validación cruzada estratificada (k-fold) para estimar el desempeño del
+# clasificador. El split 80/20 de arriba sigue produciendo el modelo exportado;
+# el k-fold entrega la métrica reportable (media ± desviación estándar).
+ENTRENAMIENTO_CV_FOLDS = 5
+
+# Nombre de la arquitectura del clasificador, para trazabilidad en las métricas.
+ARQUITECTURA = "TCN"
+
 # --------------------------------------------------------------------------- #
 # Exportación ONNX (ModelExporter)
 # --------------------------------------------------------------------------- #

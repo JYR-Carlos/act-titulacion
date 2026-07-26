@@ -8,6 +8,8 @@ Uso:
     python entrenar.py                                  # data/processed/dataset.npz
     python entrenar.py --dataset data/processed/dataset.npz
     python entrenar.py --sintetico                      # dataset falso (smoke test)
+    python entrenar.py --cv                             # + validación cruzada k-fold
+    python entrenar.py --cv --cv-folds 5 --solo-cv      # solo evaluar, sin exportar
 """
 from __future__ import annotations
 
@@ -43,7 +45,17 @@ def main() -> int:
     ap.add_argument("--sintetico", action="store_true",
                     help="usar un dataset sintético para smoke-testing")
     ap.add_argument("--epochs", type=int, default=config.ENTRENAMIENTO_EPOCHS)
+    ap.add_argument("--cv", action="store_true",
+                    help="ejecutar validación cruzada estratificada k-fold "
+                         "antes de entrenar el modelo final")
+    ap.add_argument("--cv-folds", type=int, default=config.ENTRENAMIENTO_CV_FOLDS,
+                    help=f"número de folds (default {config.ENTRENAMIENTO_CV_FOLDS})")
+    ap.add_argument("--solo-cv", action="store_true",
+                    help="solo validación cruzada: no entrena ni guarda el "
+                         "modelo final (implica --cv)")
     args = ap.parse_args()
+    if args.solo_cv:
+        args.cv = True
 
     if args.sintetico:
         print("[entrenar] Usando dataset SINTÉTICO (solo para probar el pipeline).")
@@ -57,12 +69,33 @@ def main() -> int:
         X, y, classes = ModelTrainer.cargar_dataset(ds)
 
     print(f"[entrenar] X={X.shape}  clases={classes}")
-    trainer = ModelTrainer(epochs=args.epochs)
-    m = trainer.train(X, y, classes)
+    trainer = ModelTrainer(epochs=args.epochs, cv_folds=args.cv_folds)
 
-    print("\n===== RESULTADOS =====")
+    cv = None
+    if args.cv:
+        print(f"\n[entrenar] Validación cruzada estratificada "
+              f"({args.cv_folds}-fold) — entrena {args.cv_folds} modelos.")
+        cv = trainer.evaluar_cv(X, y, classes)
+        print("\n===== VALIDACIÓN CRUZADA =====")
+        print(f"  accuracy       : {cv.resumen()}  (objetivo MVP >= 0.85)")
+        print("  por fold       : " +
+              ", ".join(f"{a:.3f}" for a in cv.fold_accuracies))
+        print(f"  matriz conf.   : {cv.confusion_png}")
+        print(f"  métricas       : {cv.metrics_path}")
+
+    if args.solo_cv:
+        print("\n[entrenar] --solo-cv: no se entrenó el modelo final. "
+              "Vuelve a correr sin --solo-cv para generar el .keras.")
+        return 0
+
+    m = trainer.train(X, y, classes, cv=cv)
+
+    print("\n===== RESULTADOS (modelo final) =====")
+    print(f"  arquitectura   : {m.architecture}")
     print(f"  val_accuracy   : {m.val_accuracy:.3f}  (objetivo MVP >= 0.85)")
     print(f"  train_accuracy : {m.train_accuracy:.3f}")
+    if m.cv is not None:
+        print(f"  cross-val      : {m.cv.resumen()}")
     print(f"  modelo Keras   : {m.keras_path}")
     print(f"  matriz conf.   : {m.confusion_png}")
     print("Siguiente paso:  python exportar_onnx.py")
