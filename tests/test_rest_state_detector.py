@@ -49,14 +49,37 @@ def test_ciclo_completo_emite_end():
     assert len(ends[0].sequence) >= config.REST_MIN_FRAMES_SENA
 
 
-def test_perdida_tracking_descarta():
+def test_parpadeo_breve_no_descarta():
+    """running_mode="image" redetecta cada frame: un parpadeo de la mano de
+    hasta REST_FRAMES_PERDIDA_MAX frames es variación normal, no pérdida real
+    de tracking, y la captura en curso no debe tirarse por eso."""
     det = RestStateDetector()
     for _ in range(5):
         det.update(_mano_base())
     for i in range(10):  # entra en captura
         det.update(_frame_movido(0.3 * ((i % 2) * 2 - 1)))
     assert det.capturando
-    ev = det.update(None)  # pérdida de tracking
+    for _ in range(config.REST_FRAMES_PERDIDA_MAX):  # parpadeo tolerado
+        ev = det.update(None)
+        assert ev.type == SignEventType.CAPTURING
+        assert det.capturando
+    # Vuelve la mano: la captura sigue viva y puede cerrar con END normalmente.
+    eventos = [det.update(_mano_base()) for _ in range(12)]
+    ends = [e for e in eventos if e.type == SignEventType.END]
+    assert len(ends) == 1
+    assert ends[0].sequence is not None
+
+
+def test_perdida_tracking_sostenida_descarta():
+    det = RestStateDetector()
+    for _ in range(5):
+        det.update(_mano_base())
+    for i in range(10):  # entra en captura
+        det.update(_frame_movido(0.3 * ((i % 2) * 2 - 1)))
+    assert det.capturando
+    ev = None
+    for _ in range(config.REST_FRAMES_PERDIDA_MAX + 1):  # supera la tolerancia
+        ev = det.update(None)
     assert ev.type == SignEventType.DISCARDED
     assert det.state == "reposo"
 

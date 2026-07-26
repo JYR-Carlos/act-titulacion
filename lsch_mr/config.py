@@ -69,6 +69,16 @@ REST_FRAMES_INICIO = 3          # frames de movimiento sostenido para iniciar ca
 REST_FRAMES_FIN = 6             # frames de reposo sostenido para cerrar la seña
 REST_MIN_FRAMES_SENA = 5        # secuencias más cortas se descartan como ruido
 
+# Frames SIN mano detectada, en capturando, tolerados antes de descartar la
+# secuencia por "pérdida de tracking". running_mode="image" (el oficial, ver
+# INTEGRACION_UNITY.md sección 7) redetecta la palma en cada frame sin arrastrar
+# ROI del frame anterior, así que un parpadeo de 1-2 frames (motion blur, ángulo,
+# borde del cuadro) es variación normal, no que la mano se haya ido de verdad.
+# Con tolerancia 0 (comportamiento previo a 2026-07-27) ese parpadeo tiraba toda
+# la secuencia en curso. Mismo orden de magnitud que REST_FRAMES_INICIO: alcanza
+# para absorber el parpadeo sin confundirlo con una pérdida sostenida real.
+REST_FRAMES_PERDIDA_MAX = 3
+
 # --------------------------------------------------------------------------- #
 # Clasificación (SignClassifier)
 # --------------------------------------------------------------------------- #

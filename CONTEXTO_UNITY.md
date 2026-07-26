@@ -170,8 +170,16 @@ Después:
    que Sentis da los mismos scores que onnxruntime.
 5. **`RestStateDetector`**: máquina de 2 estados (`reposo` / `capturando`).
    Abre con 3 frames de movimiento sostenido, cierra con 6 de reposo sostenido,
-   y recorta esos 6 finales de la secuencia. Pérdida de tracking en captura →
-   descarta sin clasificar (excepción EX-01).
+   y recorta esos 6 finales de la secuencia. Pérdida de tracking sostenida en
+   captura (> 3 frames seguidos sin mano, `REST_FRAMES_PERDIDA_MAX`) → descarta
+   sin clasificar (excepción EX-01).
+   > **Corregido el 2026-07-26**: un parpadeo de 1-3 frames sin mano detectada
+   > (normal en `running_mode=IMAGE`, que redetecta la palma en cada frame sin
+   > arrastrar el ROI del anterior) ya NO descarta la captura — antes lo hacía
+   > con un solo frame perdido, y eso tiraba señas completas por un parpadeo de
+   > detección, no por una pérdida real. Si el port en C# no replica esta
+   > tolerancia, va a descartar señas mucho más seguido que Python con la misma
+   > cámara.
 6. **Capa 4**: `MessageComposer` (buffer de palabras, `maxWords`,
    `continuityTimeout`, reinicio manual) y el render del subtítulo.
 

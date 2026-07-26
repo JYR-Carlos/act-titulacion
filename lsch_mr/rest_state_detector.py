@@ -6,7 +6,13 @@ Máquina de estados que segmenta el inicio/fin de una seña por reposo
 
     Reposo --(manos salen de reposo)--> Capturando
     Capturando --(retorno sostenido a reposo, FIN)--> [secuencia despachada] --> Reposo
-    Capturando --(pérdida de tracking)--> [descarta parcial] --> Reposo
+    Capturando --(sin mano > frames_perdida_max frames seguidos)--> [descarta parcial] --> Reposo
+
+    Un parpadeo de detección de hasta `frames_perdida_max` frames seguidos NO
+    descarta la captura: running_mode="image" redetecta la palma en cada frame
+    (sin arrastrar el ROI del anterior), así que perder la mano 1-2 frames por
+    motion blur o un ángulo raro es esperable, no evidencia de que la seña
+    terminó o de que la mano se fue de verdad.
 
 La métrica de movimiento es el desplazamiento medio por landmark entre frames,
 escalado por el tamaño de la mano (distancia L0–L9). Así el umbral es invariante
@@ -34,11 +40,13 @@ class RestStateDetector:
                  umbral_movimiento: float = config.REST_UMBRAL_MOVIMIENTO,
                  frames_inicio: int = config.REST_FRAMES_INICIO,
                  frames_fin: int = config.REST_FRAMES_FIN,
-                 min_frames: int = config.REST_MIN_FRAMES_SENA) -> None:
+                 min_frames: int = config.REST_MIN_FRAMES_SENA,
+                 frames_perdida_max: int = config.REST_FRAMES_PERDIDA_MAX) -> None:
         self.umbral = umbral_movimiento
         self.frames_inicio = frames_inicio
         self.frames_fin = frames_fin
         self.min_frames = min_frames
+        self.frames_perdida_max = frames_perdida_max
         self.reset()
 
     def reset(self) -> None:
@@ -47,6 +55,7 @@ class RestStateDetector:
         self._prev: Optional[np.ndarray] = None
         self._mov_count = 0
         self._rest_count = 0
+        self._perdida_count = 0
 
     # -- Contrato del diseño (Sección 10.2) --------------------------------- #
     def update(self, frame: Optional[np.ndarray],
@@ -64,12 +73,18 @@ class RestStateDetector:
         if frame is None:
             self._prev = None
             if self.state == "capturando":
-                self.reset()
-                return SignEvent(SignEventType.DISCARDED)
+                self._perdida_count += 1
+                if self._perdida_count > self.frames_perdida_max:
+                    self.reset()
+                    return SignEvent(SignEventType.DISCARDED)
+                # Parpadeo tolerado: no se apila nada este frame (no hay
+                # payload), pero la captura sigue viva.
+                return SignEvent(SignEventType.CAPTURING)
             self._mov_count = 0
             self._buffer.clear()
             return SignEvent(SignEventType.IDLE)
 
+        self._perdida_count = 0  # hubo mano: se cancela cualquier parpadeo en curso
         frame = np.asarray(frame, dtype=np.float32).reshape(config.NUM_LANDMARKS,
                                                             config.NUM_EJES)
         movimiento = self._movimiento(self._prev, frame)
