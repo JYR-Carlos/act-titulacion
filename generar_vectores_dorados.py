@@ -35,7 +35,13 @@ configurar_utf8()
 
 SALIDA = config.RAIZ / "integracion" / "vectores_dorados.json"
 TOLERANCIA = 1e-5
-_DEC = 6          # decimales guardados; por encima de la tolerancia declarada
+_DEC = 6          # decimales de las SALIDAS esperadas; por encima de la tolerancia
+_DEC_ENTRADA = 12  # las ENTRADAS se guardan casi exactas.
+# Por qué no basta con _DEC=6 en la entrada: normalize divide por ||L9-L0||, que
+# en la mano sintética vale ~0.06, así que amplifica el redondeo de la entrada
+# unas 17 veces. Con 6 decimales, el error de 5e-7 llega a ~3.4e-5 a la salida y
+# el port en C# no puede reproducir el `esperado` dentro de la tolerancia 1e-5
+# aunque esté bien implementado.
 
 
 def _mano_base() -> np.ndarray:
@@ -83,6 +89,11 @@ def _r(a: np.ndarray) -> list:
     return np.round(np.asarray(a, dtype=np.float64), _DEC).tolist()
 
 
+def _re(a: np.ndarray) -> list:
+    """Como _r pero para las entradas: ver la nota de _DEC_ENTRADA."""
+    return np.round(np.asarray(a, dtype=np.float64), _DEC_ENTRADA).tolist()
+
+
 def construir_casos() -> list[dict]:
     norm = KeypointNormalizer()
     mano = _mano_base()
@@ -91,7 +102,7 @@ def construir_casos() -> list[dict]:
     casos.append({
         "id": "normalize_mano_tipica",
         "descripcion": "KeypointNormalizer.normalize sobre una mano bien formada.",
-        "entrada": {"frame_21x3": _r(mano)},
+        "entrada": {"frame_21x3": _re(mano)},
         "esperado": {"normvector_63": _r(norm.normalize(mano))},
     })
 
@@ -100,7 +111,7 @@ def construir_casos() -> list[dict]:
         "id": "normalize_invariancia_traslacion",
         "descripcion": ("La misma mano desplazada debe dar el MISMO NormVector. "
                         "Si falla, el centrado en L0 no se aplicó."),
-        "entrada": {"frame_21x3": _r(trasladada)},
+        "entrada": {"frame_21x3": _re(trasladada)},
         "esperado": {"normvector_63": _r(norm.normalize(trasladada)),
                      "igual_a_caso": "normalize_mano_tipica"},
     })
@@ -110,7 +121,7 @@ def construir_casos() -> list[dict]:
         "id": "normalize_invariancia_escala",
         "descripcion": ("La misma mano escalada x2.5 debe dar el MISMO NormVector. "
                         "Si falla, no se dividió por ||L9-L0||."),
-        "entrada": {"frame_21x3": _r(escalada)},
+        "entrada": {"frame_21x3": _re(escalada)},
         "esperado": {"normvector_63": _r(norm.normalize(escalada))},
     })
 
@@ -119,7 +130,7 @@ def construir_casos() -> list[dict]:
         "id": "normalize_mano_degenerada",
         "descripcion": ("Todos los landmarks colapsados: ||L9-L0|| < 1e-6. "
                         "Debe devolver ceros, NO NaN ni división por cero."),
-        "entrada": {"frame_21x3": _r(degenerada)},
+        "entrada": {"frame_21x3": _re(degenerada)},
         "esperado": {"normvector_63": _r(np.zeros(config.NORMVECTOR_DIM))},
     })
 
@@ -128,7 +139,7 @@ def construir_casos() -> list[dict]:
         "id": "ensamblado_ambas_mano_ausente",
         "descripcion": ("Modo 'ambas': orden [Left|Right]; la mano ausente se "
                         "rellena con 63 ceros, no se omite ni se duplica la otra."),
-        "entrada": {"frame_2x21x3_left_nan": _r(par[0])},
+        "entrada": {"frame_2x21x3_left_nan": _re(par[0])},
         "esperado": {"features_126": _r(secuencia_a_features(par, modo="ambas")[0])},
     })
 
@@ -138,7 +149,7 @@ def construir_casos() -> list[dict]:
         "descripcion": ("Interpolación lineal en el tiempo, por característica, "
                         "de T=17 a SEQ_LEN=60. Dimensión reducida (F=4) a "
                         "propósito: aísla el remuestreo del resto."),
-        "entrada": {"features_17x4": _r(corta)},
+        "entrada": {"features_17x4": _re(corta)},
         "esperado": {"features_60x4": _r(remuestrear_tiempo(corta, config.SEQ_LEN))},
     })
 
@@ -148,7 +159,7 @@ def construir_casos() -> list[dict]:
         "descripcion": ("Cadena completa: SignSequence cruda (T=23, 2 manos) -> "
                         "normalización por mano -> ensamblado [Left|Right] -> "
                         "remuestreo a 60. Es la entrada exacta que recibe el ONNX."),
-        "entrada": {"secuencia_23x2x21x3": _r(seq)},
+        "entrada": {"secuencia_23x2x21x3": _re(seq)},
         "esperado": {"entrada_modelo_60x126":
                      _r(preparar_entrada(seq, modo="ambas", seq_len=config.SEQ_LEN))},
     })
@@ -196,7 +207,7 @@ def caso_modelo() -> dict | None:
                         "REENTRENAR: regenerar junto con el .onnx."),
         "modelo": {"modo_manos": modo, "seq_len": seq_len,
                    "n_clases": len(clases), "sha1_onnx": _sha1(onnx_path)},
-        "entrada": {f"entrada_modelo_{seq_len}x{entrada.shape[1]}": _r(entrada)},
+        "entrada": {f"entrada_modelo_{seq_len}x{entrada.shape[1]}": _re(entrada)},
         "esperado": {"scores": _r(scores),
                      "indice_ganador": idx,
                      "etiqueta_ganadora": clases[idx] if clases else None},
@@ -235,7 +246,12 @@ def construir_documento() -> dict:
 
 
 def _comparar(doc: dict) -> int:
-    """Recalcula los casos y los compara con el JSON guardado."""
+    """Recalcula los casos y los compara con el JSON guardado.
+
+    Detecta que el preprocesamiento cambió, pero NO que el JSON sea usable:
+    compara `esperado` contra `esperado`, ambos calculados desde `_mano_base()`
+    sin redondear. Para eso está `_comparar_roundtrip`.
+    """
     actuales = {c["id"]: c for c in construir_casos()}
     cm = caso_modelo()
     if cm is not None:
@@ -259,6 +275,82 @@ def _comparar(doc: dict) -> int:
     return fallos
 
 
+def _pipeline_desde_entrada(caso: dict) -> dict:
+    """Reejecuta el pipeline sobre la ENTRADA GUARDADA del caso.
+
+    Es exactamente lo que hace el port en C#: leer el JSON, alimentar `entrada`
+    y reproducir `esperado`. Devuelve {} si el caso no aplica.
+    """
+    cid = caso["id"]
+    ent = caso["entrada"]
+
+    if cid.startswith("normalize_"):
+        mano = np.asarray(ent["frame_21x3"], dtype=np.float32)
+        return {"normvector_63": KeypointNormalizer().normalize(mano)}
+
+    if cid == "ensamblado_ambas_mano_ausente":
+        par = np.asarray(ent["frame_2x21x3_left_nan"], dtype=np.float32)[None, ...]
+        return {"features_126": secuencia_a_features(par, modo="ambas")[0]}
+
+    if cid == "remuestreo_temporal_17_a_60":
+        corta = np.asarray(ent["features_17x4"], dtype=np.float32)
+        return {"features_60x4": remuestrear_tiempo(corta, config.SEQ_LEN)}
+
+    if cid == "end_to_end_secuencia_cruda_a_entrada_del_modelo":
+        seq = np.asarray(ent["secuencia_23x2x21x3"], dtype=np.float32)
+        return {"entrada_modelo_60x126":
+                preparar_entrada(seq, modo="ambas", seq_len=config.SEQ_LEN)}
+
+    if cid == "inferencia_onnx_entrada_conocida":
+        onnx_path = config.OUTPUTS_MODELS_DIR / "modelo.onnx"
+        # Se invalida al reentrenar: si el sha1 no cuadra, el caso no aplica.
+        if not onnx_path.exists() or _sha1(onnx_path) != caso["modelo"]["sha1_onnx"]:
+            return {}
+        import onnxruntime as ort
+
+        entrada = np.asarray(ent[next(iter(ent))], dtype=np.float32)
+        sesion = ort.InferenceSession(str(onnx_path), providers=["CPUExecutionProvider"])
+        nombre = sesion.get_inputs()[0].name
+        return {"scores": sesion.run(None, {nombre: entrada[None, ...]})[0][0]}
+
+    return {}
+
+
+def _comparar_roundtrip(doc: dict) -> int:
+    """Comprueba que cada caso se reproduce desde su PROPIA entrada guardada.
+
+    Sin esto, un JSON puede estar internamente roto y pasar `_comparar` igual:
+    fue el caso cuando las entradas se guardaban con la misma precisión que las
+    salidas y normalize amplificaba ese redondeo ~17x (ver _DEC_ENTRADA). El
+    port en C# fallaba con ~3.4e-5 aunque estuviera bien implementado.
+    """
+    fallos = 0
+    for caso in doc["casos"]:
+        cid = caso["id"]
+        try:
+            obtenidos = _pipeline_desde_entrada(caso)
+        except Exception as exc:                      # noqa: BLE001
+            print(f"  [!] {cid}: la entrada guardada no pasa por el pipeline ({exc})")
+            fallos += 1
+            continue
+
+        if not obtenidos:
+            print(f"  {cid}: n/a (no aplica a este modelo)")
+            continue
+
+        for clave, obtenido in obtenidos.items():
+            esperado = caso["esperado"].get(clave)
+            if not isinstance(esperado, list):
+                continue
+            dif = np.max(np.abs(np.array(esperado, dtype=np.float64)
+                                - np.asarray(obtenido, dtype=np.float64)))
+            estado = "ok" if dif <= TOLERANCIA else "NO REPRODUCIBLE"
+            if dif > TOLERANCIA:
+                fallos += 1
+            print(f"  {cid}.{clave}: {estado} (dif max {dif:.2e})")
+    return fallos
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Vectores dorados para el port a C#")
     ap.add_argument("--salida", default=str(SALIDA))
@@ -274,6 +366,8 @@ def main() -> int:
             return 1
         doc = json.loads(destino.read_text(encoding="utf-8"))
         print(f"[dorados] verificando {destino} ...")
+
+        print("\n[1/2] el pipeline sigue dando lo mismo que el JSON:")
         fallos = _comparar(doc)
         if fallos:
             print(f"\n[dorados] {fallos} discrepancia(s): el preprocesamiento "
@@ -281,6 +375,18 @@ def main() -> int:
             print("  Si el cambio es intencional, regenera el JSON y avisa al "
                   "equipo de Unity: su port en C# queda invalidado.")
             return 1
+
+        print("\n[2/2] cada caso se reproduce desde su propia entrada guardada\n"
+              "      (es lo que hace el port en C#):")
+        fallos = _comparar_roundtrip(doc)
+        if fallos:
+            print(f"\n[dorados] {fallos} caso(s) NO reproducibles desde su entrada.")
+            print("  El JSON está internamente inconsistente: ningún port puede "
+                  "pasarlo, por bien escrito que esté.")
+            print("  Suele ser precisión insuficiente en las entradas: revisa "
+                  "_DEC_ENTRADA y regenera.")
+            return 1
+
         print("\n[dorados] todo coincide.")
         return 0
 
