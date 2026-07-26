@@ -37,6 +37,25 @@ class MessageComposer:
         if len(self._buffer) >= self.max_words:
             self._desplegar()
 
+    def tick(self) -> bool:
+        """Cierra el mensaje si el timeout de continuidad ya venció.
+
+        `appendWord()` también comprueba el timeout, pero solo cuando llega la
+        siguiente palabra: sin `tick()`, un mensaje queda colgado en pantalla
+        indefinidamente si el usuario deja de señar. Llamar a `tick()` una vez
+        por frame hace que el cierre por expiración ocurra en el momento que
+        describe el diseño ("al expirar el timer, cierra el mensaje"), sin
+        necesidad de un hilo ni un temporizador activo.
+
+        Devuelve True si el mensaje se cerró en esta llamada.
+        """
+        if self._ultimo_ts is None:
+            return False
+        if self._reloj() - self._ultimo_ts <= self.continuity_timeout:
+            return False
+        self._desplegar()
+        return True
+
     def texto(self) -> str:
         return " ".join(self._buffer)
 

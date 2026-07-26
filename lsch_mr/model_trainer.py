@@ -40,13 +40,19 @@ class CVMetrics:
     architecture: str = config.ARQUITECTURA
     confusion_png: str = ""
     metrics_path: str = ""
+    # "estratificado" reparte las muestras al azar; "por señante" mantiene a cada
+    # señante entero dentro de un solo fold. Ver evaluar_cv().
+    esquema: str = "estratificado"
+    n_grupos: int = 0
 
     def resumen(self) -> str:
         return (f"{self.mean_accuracy:.3f} ± {self.std_accuracy:.3f} "
-                f"({self.n_splits}-fold estratificado)")
+                f"({self.n_splits}-fold {self.esquema})")
 
     def to_dict(self) -> dict:
         return {"n_splits": self.n_splits,
+                "esquema": self.esquema,
+                "n_grupos": self.n_grupos,
                 "fold_accuracies": self.fold_accuracies,
                 "mean_accuracy": self.mean_accuracy,
                 "std_accuracy": self.std_accuracy,
@@ -93,6 +99,51 @@ class ModelTrainer:
         y = data["y"].astype("int64")
         classes = [str(c) for c in data["classes"]]
         return X, y, classes
+
+    @staticmethod
+    def cargar_grupos(npz_path: Path, patron: str) -> Optional[np.ndarray]:
+        """Extrae el identificador de grupo (señante) de cada `sample_id`.
+
+        `patron` admite dos formas:
+          * **número de campo** (p. ej. `"2"`): toma el N-ésimo campo separado
+            por `_` del `sample_id`, contando desde 1. Para nombres tipo
+            `<clase>_<señante>_<repetición>` el señante es el campo 2.
+          * **expresión regular** con UN grupo de captura, para convenciones de
+            nombre que no sean campos separados por `_`.
+
+        El número de campo evita tener que escribir una regex en la línea de
+        comandos, donde las comillas se comportan distinto en cada shell.
+        Devuelve None si el dataset no guardó `sample_ids`.
+        """
+        import re
+
+        data = np.load(npz_path, allow_pickle=True)
+        if "sample_ids" not in data:
+            return None
+
+        sids = [str(s) for s in data["sample_ids"]]
+        grupos = []
+
+        if patron.strip().isdigit():
+            campo = int(patron.strip())
+            for sid in sids:
+                partes = sid.split("_")
+                if len(partes) < campo:
+                    raise ValueError(
+                        f"El sample_id {sid!r} no tiene {campo} campos separados "
+                        "por '_'. Revisa la convención de nombres del corpus.")
+                grupos.append(partes[campo - 1])
+        else:
+            rx = re.compile(patron)
+            for sid in sids:
+                m = rx.search(sid)
+                if not m:
+                    raise ValueError(
+                        f"El patrón {patron!r} no casa con el sample_id {sid!r}. "
+                        "Revisa la convención de nombres del corpus.")
+                grupos.append(m.group(1))
+
+        return np.array(grupos, dtype=object)
 
     # -- Helpers compartidos train() / evaluar_cv() -------------------------- #
     # Ambos modos deben entrenar EXACTAMENTE la misma arquitectura y receta;
@@ -198,8 +249,9 @@ class ModelTrainer:
                    classes: list[str],
                    n_splits: Optional[int] = None,
                    reports_dir: Path = config.OUTPUTS_REPORTS_DIR,
-                   verbose: int = 0) -> CVMetrics:
-        """Validación cruzada estratificada k-fold sobre todo el corpus.
+                   verbose: int = 0,
+                   groups: Optional[np.ndarray] = None) -> CVMetrics:
+        """Validación cruzada k-fold sobre todo el corpus.
 
         Entrena un modelo por fold (misma arquitectura y receta que `train()`)
         y evalúa sobre el fold retenido. Devuelve accuracy media ± desviación
@@ -207,11 +259,20 @@ class ModelTrainer:
         es predicha exactamente una vez, por un modelo que no la vio en
         entrenamiento.
 
+        `groups` (opcional) asigna cada muestra a un señante. Si se pasa, los
+        folds se construyen de modo que **ningún señante aparezca a la vez en
+        entrenamiento y en validación**. Importa: con varias repeticiones por
+        señante, un reparto al azar deja al mismo señante en ambos lados y el
+        modelo puede apoyarse en idiosincrasias suyas en vez de en la seña,
+        inflando la cifra. La evaluación por señante mide lo que interesa —
+        generalizar a una persona nueva— y es la que debe reportarse cuando el
+        corpus tiene más de un señante.
+
         No guarda ningún modelo — el modelo exportable lo produce `train()`.
         """
         import tensorflow as tf
         from sklearn.metrics import classification_report, confusion_matrix
-        from sklearn.model_selection import StratifiedKFold
+        from sklearn.model_selection import StratifiedGroupKFold, StratifiedKFold
 
         X = np.asarray(X, dtype="float32")
         y = np.asarray(y, dtype="int64")
@@ -230,13 +291,32 @@ class ModelTrainer:
                   f"muestras; se reduce k de {n_splits} a {min_por_clase}.")
             n_splits = min_por_clase
 
-        skf = StratifiedKFold(n_splits=n_splits, shuffle=True,
-                              random_state=self.seed)
+        esquema, n_grupos = "estratificado", 0
+        if groups is not None:
+            groups = np.asarray(groups)
+            n_grupos = int(len(np.unique(groups)))
+            if n_grupos < 2:
+                raise ValueError(
+                    f"Se pidió validación por señante pero solo hay {n_grupos} "
+                    "señante(s) en el corpus. Con un único señante no se puede "
+                    "medir generalización a personas nuevas.")
+            if n_grupos < n_splits:
+                print(f"[cv] AVISO: hay {n_grupos} señantes; se reduce k de "
+                      f"{n_splits} a {n_grupos}.")
+                n_splits = n_grupos
+            esquema = "por señante"
+            skf = StratifiedGroupKFold(n_splits=n_splits, shuffle=True,
+                                       random_state=self.seed)
+            print(f"[cv] esquema: dejando señantes fuera "
+                  f"({n_grupos} señantes, {n_splits} folds).")
+        else:
+            skf = StratifiedKFold(n_splits=n_splits, shuffle=True,
+                                  random_state=self.seed)
 
         fold_accs: list[float] = []
         y_pred_oof = np.zeros_like(y)   # predicción out-of-fold de cada muestra
 
-        for k, (idx_tr, idx_va) in enumerate(skf.split(X, y), start=1):
+        for k, (idx_tr, idx_va) in enumerate(skf.split(X, y, groups), start=1):
             # Semilla distinta por fold pero determinista: reproducible sin que
             # los k modelos partan de la misma inicialización.
             tf.random.set_seed(self.seed + k)
@@ -267,19 +347,22 @@ class ModelTrainer:
             y, y_pred_oof, labels=etiquetas, target_names=classes,
             output_dict=True, zero_division=0)
 
+        # Sufijo distinto por esquema: los dos resultados son complementarios y
+        # no deben pisarse el uno al otro en el informe.
+        sufijo = "_senante" if groups is not None else ""
         reports_dir = Path(reports_dir); reports_dir.mkdir(parents=True, exist_ok=True)
         cm_png = self._plot_confusion(
-            cm, classes, reports_dir / "matriz_confusion_cv.png",
-            titulo=f"Matriz de confusión ({n_splits}-fold, out-of-fold)")
+            cm, classes, reports_dir / f"matriz_confusion_cv{sufijo}.png",
+            titulo=f"Matriz de confusión ({n_splits}-fold {esquema}, out-of-fold)")
 
         cv = CVMetrics(
             n_splits=n_splits, fold_accuracies=fold_accs,
             mean_accuracy=float(np.mean(fold_accs)),
             std_accuracy=float(np.std(fold_accs)),
             classes=classes, confusion_matrix=cm.tolist(), report=report,
-            confusion_png=str(cm_png))
+            confusion_png=str(cm_png), esquema=esquema, n_grupos=n_grupos)
 
-        metrics_path = reports_dir / "cv_metrics.json"
+        metrics_path = reports_dir / f"cv_metrics{sufijo}.json"
         metrics_path.write_text(
             json.dumps(cv.to_dict(), ensure_ascii=False, indent=2),
             encoding="utf-8")

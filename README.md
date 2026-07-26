@@ -107,16 +107,47 @@ seña y vuelve a reposo: la secuencia se guarda sola. `q`/`ESC` termina.
 ```powershell
 python build_dataset.py                 # lee data/raw/*.csv, modo dominante (63 dim)
 python build_dataset.py --modo ambas    # dos manos (126 dim)
+python build_dataset.py --estricto      # falla si una glosa queda bajo 50 muestras
 ```
+Avisa cuando alguna glosa no llega al mínimo de muestras del diseño
+(`config.CORPUS_MIN_MUESTRAS_POR_CLASE`); con `--estricto` no guarda el dataset.
+Es más barato descubrirlo aquí que después de entrenar.
 
 ### 3) Entrenar el TCN
 
 ```powershell
 python entrenar.py                      # usa data/processed/dataset.npz
+python entrenar.py --cv                 # + validación cruzada k-fold
+python entrenar.py --cv --solo-cv       # solo evaluar, sin producir modelo
+python entrenar.py --cv-grupos '^[^_]+_([^_]+)_'   # dejando señantes fuera
 python entrenar.py --sintetico          # smoke test sin corpus real
 ```
-Reporta `val_accuracy` (objetivo MVP ≥ 0.85) y guarda la matriz de confusión en
-`outputs/reports/`.
+
+Tres cifras con propósitos distintos:
+
+- `train()` → split estratificado 80/20 con early stopping. Produce el **modelo
+  exportable** y su `val_accuracy`.
+- `evaluar_cv()` → **k-fold estratificado** (k=5): accuracy media ± desviación
+  estándar y matriz de confusión out-of-fold. Con ~50 muestras/glosa el 80/20
+  deja ~10 muestras de validación por clase, demasiado ruidoso.
+- `evaluar_cv(groups=...)` → **k-fold dejando señantes fuera**, con `--cv-grupos`.
+  **Es la cifra honesta cuando el corpus tiene más de un señante.**
+
+> **Por qué importa el tercer protocolo.** Si un señante graba varias
+> repeticiones de la misma glosa, un k-fold al azar reparte esas repeticiones
+> entre entrenamiento y validación: el modelo puede reconocer *a la persona* en
+> vez de *la seña*, y la cifra sale inflada. Dejando señantes fuera se mide lo
+> que de verdad interesa —generalizar a alguien que el modelo nunca vio—, que es
+> exactamente el escenario de ventanilla. El corpus LSCh planificado (≥2
+> señantes) tiene el mismo problema, así que conviene evaluarlo igual.
+>
+> `--cv-grupos` recibe una regex con un grupo de captura que extrae el señante
+> del `sample_id`. Para nombres tipo `<clase>_<señante>_<repetición>` el patrón
+> es `^[^_]+_([^_]+)_`. Requiere un dataset construido con una versión de
+> `build_dataset.py` que guarde `sample_ids`.
+
+Resultados en `outputs/reports/` (`metrics.json`, `cv_metrics.json`, matrices de
+confusión en PNG).
 
 ### 4) Exportar a ONNX (para Unity Sentis)
 
@@ -131,9 +162,28 @@ Valida que los operadores del grafo estén soportados por Sentis
 ```powershell
 python demo_vivo.py --fuente 0
 ```
-Muestra la glosa reconocida, su confianza, la latencia de inferencia y el
-mensaje compuesto (`MessageComposer`). Es el paso previo a portar a Quest 3
-(Sección 8.2): solo cambian la fuente de keypoints y el canal de salida.
+Muestra la glosa reconocida, su confianza, el mensaje compuesto
+(`MessageComposer`) y la **latencia end-to-end** contrastada con el umbral de
+500 ms del diseño. Teclas: `r` reinicia el mensaje (FA-01 de CU-03), `q`/`ESC`
+salir.
+
+La latencia reportada incluye el retardo de segmentación (los `REST_FRAMES_FIN`
+frames de reposo que hacen falta para confirmar el fin de la seña), no solo la
+inferencia: medir únicamente el ONNX daría ~3 ms, una cifra irrelevante frente al
+presupuesto de 500 ms.
+
+### 6) Preparar la integración con Unity
+
+```powershell
+python generar_vectores_dorados.py             # genera integracion/vectores_dorados.json
+python generar_vectores_dorados.py --verificar # comprueba que sigue vigente
+```
+Congela la salida de referencia del preprocesamiento para que el port a C# pueda
+verificarse caso por caso. Ver **`INTEGRACION_UNITY.md`** para la especificación
+completa y el código C# de referencia.
+
+> Si alguien cambia el preprocesamiento en Python, `--verificar` falla: el port en
+> C# queda invalidado y hay que regenerar el JSON y avisar al equipo de Unity.
 
 ---
 
@@ -164,8 +214,53 @@ python build_dataset.py --entrada data/raw/swl_ref.csv --modo ambas
 ```
 
 `extraer_lote.py` es genérico (mapea etiquetas desde un CSV `FILENAME,LABEL` o
-del nombre de archivo), así que sirve igual para **LSA64** — la opción entrenable
-que prefiere el diseño para validar el clasificador end-to-end.
+del nombre de archivo), así que sirve igual para **LSA64**.
+
+### Corpus proxy con LSA64 (mientras no exista el corpus LSCh)
+
+**LSA64** (lengua de señas argentina, CC BY-NC-SA 4.0) trae 64 señas × 10
+señantes × 5 repeticiones = **50 muestras por seña**. Tomando 10 señas se obtiene
+un corpus con **exactamente la misma forma que el objetivo del MVP**
+(10 clases × 50 muestras), lo que permite medir accuracy de verdad antes de tener
+grabado el corpus LSCh.
+
+```powershell
+python extraer_lote.py `
+    --videos-dir data/external/lsa64/videos `
+    --anotaciones data/external/lsa64/lsa64_10_annotations.csv `
+    --salida data/raw/lsa64_10.csv
+
+python build_dataset.py --entrada data/raw/lsa64_10.csv --modo ambas
+python entrenar.py --cv
+```
+
+> ⚠️ **Las etiquetas son las señas originales de LSA64, no glosas LSCh.** Las 10
+> clases se eligieron por paralelo semántico con el vocabulario objetivo
+> (`Thanks`↔GRACIAS, `Help`↔AYUDA, `Name`↔NOMBRE, …), pero son señas argentinas.
+> La cifra resultante mide **la capacidad del pipeline**, no el desempeño sobre
+> LSCh, y así debe presentarse en el informe.
+
+**Resultados obtenidos (2026-07-26)** sobre 483 de 500 vídeos con detección:
+
+| Modo | k-fold estratificado | **k-fold por señante** |
+|---|---|---|
+| `dominante` (63 dim) | 0.985 ± 0.012 | **0.903 ± 0.054** |
+| `ambas` (126 dim) | 0.969 ± 0.022 | 0.911 ± 0.056 |
+
+Ambos modos superan el objetivo MVP (≥ 0.85) en la evaluación por señante, que es
+la exigente. Los dos modos son indistinguibles entre sí (las diferencias caen
+dentro de las desviaciones y del ruido de corrida a corrida, ~±0.01, porque el
+entrenamiento de Keras no es bit-determinista aunque se fije la semilla), así que
+se elige `dominante` por coste: la mitad de entrada.
+
+**La cifra de LSA64 es una cota inferior.** Los señantes de LSA64 graban con
+**guantes de colores** (rosa/verde, que el dataset usa para identificar manos) y
+MediaPipe `HandLandmarker` está entrenado sobre manos desnudas. Aun así detecta
+manos en 483 de los 500 vídeos; los 17 fallos se concentran en `Patience`
+(14 vídeos: mano de canto tapando la cara) y `Appear` (3). El corpus LSCh real
+—manos desnudas, cámara propia, encuadre controlado— parte de condiciones
+mejores, así que el desempeño del pipeline sobre él no debería ser peor por esta
+causa.
 
 ---
 
@@ -206,8 +301,12 @@ pip install pytest
 pytest -q
 ```
 `tests/` cubre el `KeypointNormalizer` (invariancia a traslación/escala, casos
-degenerados) y el `RestStateDetector` (segmentación por reposo, descarte por
-pérdida de tracking).
+degenerados), el `RestStateDetector` (segmentación por reposo, descarte por
+pérdida de tracking) y el `MessageComposer` (acumulación, `maxWords`, cierre por
+timeout con reloj inyectable, reinicio manual de FA-01).
+
+Además, `python generar_vectores_dorados.py --verificar` comprueba que el
+preprocesamiento no cambió respecto a los vectores de referencia del port a C#.
 
 ---
 
@@ -236,6 +335,9 @@ grabar_corpus.py         CLI grabación del corpus
 build_dataset.py         CLI crudo -> dataset normalizado
 entrenar.py              CLI entrenamiento
 exportar_onnx.py         CLI exportación ONNX
-demo_vivo.py             CLI validación end-to-end en PC
+demo_vivo.py             CLI validación end-to-end en PC (orquestador de referencia)
+generar_vectores_dorados.py  vectores de prueba para el port del preproceso a C#
+integracion/             artefactos para el repo de Unity (vectores dorados)
+INTEGRACION_UNITY.md     contrato entre repos + spec del port a C#
 tests/                   pruebas unitarias
 ```

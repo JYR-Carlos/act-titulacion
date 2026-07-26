@@ -53,8 +53,13 @@ def main() -> int:
     ap.add_argument("--solo-cv", action="store_true",
                     help="solo validación cruzada: no entrena ni guarda el "
                          "modelo final (implica --cv)")
+    ap.add_argument("--cv-grupos", default=None, metavar="CAMPO|REGEX",
+                    help="evalúa dejando señantes fuera. Número de campo del "
+                         "sample_id separado por '_' (p.ej. 2 para "
+                         "clase_senante_repeticion), o una regex con un grupo "
+                         "de captura. Implica --cv")
     args = ap.parse_args()
-    if args.solo_cv:
+    if args.solo_cv or args.cv_grupos:
         args.cv = True
 
     if args.sintetico:
@@ -71,15 +76,28 @@ def main() -> int:
     print(f"[entrenar] X={X.shape}  clases={classes}")
     trainer = ModelTrainer(epochs=args.epochs, cv_folds=args.cv_folds)
 
+    grupos = None
+    if args.cv_grupos:
+        if args.sintetico:
+            print("[entrenar] --cv-grupos no aplica al dataset sintético.")
+            return 1
+        grupos = ModelTrainer.cargar_grupos(Path(args.dataset), args.cv_grupos)
+        if grupos is None:
+            print("[entrenar] El dataset no guarda 'sample_ids'; regenéralo con "
+                  "build_dataset.py para poder evaluar por señante.")
+            return 1
+
     cv = None
     if args.cv:
         print(f"\n[entrenar] Validación cruzada estratificada "
               f"({args.cv_folds}-fold) — entrena {args.cv_folds} modelos.")
-        cv = trainer.evaluar_cv(X, y, classes)
+        cv = trainer.evaluar_cv(X, y, classes, groups=grupos)
         print("\n===== VALIDACIÓN CRUZADA =====")
-        print(f"  accuracy       : {cv.resumen()}  (objetivo MVP >= 0.85)")
+        print(f"  accuracy       : {cv.resumen()}")
         print("  por fold       : " +
               ", ".join(f"{a:.3f}" for a in cv.fold_accuracies))
+        print(f"  objetivo MVP   : >= {config.ACCURACY_OBJETIVO:.2f}  -> "
+              f"{'CUMPLE' if cv.mean_accuracy >= config.ACCURACY_OBJETIVO else 'NO CUMPLE'}")
         print(f"  matriz conf.   : {cv.confusion_png}")
         print(f"  métricas       : {cv.metrics_path}")
 
@@ -92,7 +110,8 @@ def main() -> int:
 
     print("\n===== RESULTADOS (modelo final) =====")
     print(f"  arquitectura   : {m.architecture}")
-    print(f"  val_accuracy   : {m.val_accuracy:.3f}  (objetivo MVP >= 0.85)")
+    print(f"  val_accuracy   : {m.val_accuracy:.3f}  "
+          f"(objetivo MVP >= {config.ACCURACY_OBJETIVO:.2f})")
     print(f"  train_accuracy : {m.train_accuracy:.3f}")
     if m.cv is not None:
         print(f"  cross-val      : {m.cv.resumen()}")

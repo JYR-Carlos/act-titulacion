@@ -99,6 +99,13 @@ def main() -> int:
     ap.add_argument("--salida", default=str(config.DATA_PROCESSED_DIR / "dataset.npz"))
     ap.add_argument("--modo", choices=["dominante", "ambas"],
                     default=config.MODO_MANOS)
+    ap.add_argument("--min-muestras", type=int,
+                    default=config.CORPUS_MIN_MUESTRAS_POR_CLASE,
+                    help="muestras mínimas por glosa (Sección 12 del diseño; "
+                         f"default {config.CORPUS_MIN_MUESTRAS_POR_CLASE})")
+    ap.add_argument("--estricto", action="store_true",
+                    help="no guardar el dataset si alguna glosa queda bajo el "
+                         "mínimo, en vez de solo avisar")
     args = ap.parse_args()
 
     if args.entrada:
@@ -113,7 +120,7 @@ def main() -> int:
     todas = {}
     for c in csvs:
         for (key, label), frames in _leer_csv(c).items():
-            todas[key] = (label, frames)
+            todas[key] = (label, frames)   # key = (archivo, label, sample_id)
     if not todas:
         print("No se encontraron muestras etiquetadas en los CSV.")
         return 1
@@ -122,10 +129,12 @@ def main() -> int:
     classes = _orden_clases(labels_presentes)
     idx_de = {c: i for i, c in enumerate(classes)}
 
-    # 2) Construir X, y.
-    X, y = [], []
+    # 2) Construir X, y. Se conserva el sample_id de cada muestra: permite
+    #    trazar una fila del dataset hasta su grabación original y evaluar
+    #    dejando señantes fuera (ver entrenar.py --cv-grupos).
+    X, y, sample_ids = [], [], []
     descartadas = 0
-    for (label, frames) in todas.values():
+    for (_, _, sample_id), (label, frames) in todas.items():
         try:
             if args.modo == "ambas":
                 seq = _secuencia_ambas(frames)
@@ -136,6 +145,7 @@ def main() -> int:
                 continue
             X.append(preparar_entrada(seq, modo=args.modo, seq_len=config.SEQ_LEN))
             y.append(idx_de[label])
+            sample_ids.append(sample_id)
         except Exception as e:
             descartadas += 1
             print(f"  aviso: muestra '{label}' descartada ({e})")
@@ -146,16 +156,35 @@ def main() -> int:
 
     X = np.stack(X, axis=0).astype(np.float32)
     y = np.asarray(y, dtype=np.int64)
-    salida = Path(args.salida)
-    salida.parent.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(salida, X=X, y=y, classes=np.array(classes, dtype=object),
-                        modo_manos=args.modo)
+
+    # 3) Gate de cobertura del corpus (Sección 12: >= 50 muestras por glosa).
+    #    Es más barato descubrir aquí que una glosa quedó corta que después de
+    #    entrenar, cuando ya no hay sesión de grabación disponible.
+    conteos = {c: int(np.sum(y == idx_de[c])) for c in classes}
+    bajo_minimo = {c: n for c, n in conteos.items() if n < args.min_muestras}
 
     print(f"[build_dataset] modo={args.modo}  X={X.shape}  clases={len(classes)}")
     for c in classes:
-        print(f"    {c:>12}: {int(np.sum(y == idx_de[c]))} muestras")
+        falta = f"  <-- faltan {args.min_muestras - conteos[c]}" if c in bajo_minimo else ""
+        print(f"    {c:>12}: {conteos[c]} muestras{falta}")
     if descartadas:
         print(f"  ({descartadas} muestras descartadas)")
+
+    if bajo_minimo:
+        print(f"\n[build_dataset] AVISO: {len(bajo_minimo)} de {len(classes)} glosas "
+              f"quedan bajo las {args.min_muestras} muestras que fija el diseño. "
+              f"La clase más escasa tiene {min(bajo_minimo.values())}.")
+        print("  Con clases escasas el split 80/20 deja muy pocas muestras de "
+              "validación: reporta la métrica con k-fold (entrenar.py --cv).")
+        if args.estricto:
+            print("[build_dataset] --estricto: no se guardó el dataset.")
+            return 2
+
+    salida = Path(args.salida)
+    salida.parent.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(salida, X=X, y=y, classes=np.array(classes, dtype=object),
+                        modo_manos=args.modo,
+                        sample_ids=np.array(sample_ids, dtype=object))
     print(f"[build_dataset] guardado -> {salida}")
     return 0
 

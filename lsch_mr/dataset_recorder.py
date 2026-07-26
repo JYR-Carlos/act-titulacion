@@ -34,11 +34,17 @@ class DatasetRecorder:
     def __init__(self, glosas: list[str],
                  fuente: FuenteSpec = 0,
                  espejo: bool = True,
-                 salida_dir: Path = config.DATA_RAW_DIR) -> None:
+                 salida_dir: Path = config.DATA_RAW_DIR,
+                 senante: str = config.SENANTE_POR_DEFECTO) -> None:
         self.glosas = glosas[:10]  # teclas 0..9
         self.fuente = fuente
         self.espejo = espejo
         self.salida_dir = Path(salida_dir)
+        # El identificador del señante va DENTRO del sample_id porque es lo que
+        # permite después evaluar dejando señantes fuera (entrenar.py
+        # --cv-grupos 1). Si no se registra al grabar, esa evaluación deja de
+        # ser posible y no hay forma de reconstruirlo a posteriori.
+        self.senante = str(senante).strip().replace("_", "-") or config.SENANTE_POR_DEFECTO
 
     # -- Contrato del diseño ------------------------------------------------ #
     def recordSession(self) -> Path:
@@ -46,7 +52,7 @@ class DatasetRecorder:
         import cv2
 
         sesion = _dt.datetime.now().strftime("%Y%m%d_%H%M%S")
-        csv_path = self.salida_dir / f"corpus_{sesion}.csv"
+        csv_path = self.salida_dir / f"corpus_{self.senante}_{sesion}.csv"
         glosa_idx = 0
         muestra_id = 0
         guardadas = {g: 0 for g in self.glosas}
@@ -66,7 +72,8 @@ class DatasetRecorder:
 
                 if evento.type == SignEventType.END and evento.sequence:
                     label = self.glosas[glosa_idx]
-                    n = self._guardar_secuencia(escritor, muestra_id,
+                    sample_id = f"{self.senante}_{muestra_id:04d}"
+                    n = self._guardar_secuencia(escritor, sample_id,
                                                 evento.sequence, label)
                     guardadas[label] += 1
                     muestra_id += 1
@@ -95,14 +102,15 @@ class DatasetRecorder:
 
     # -- Utilidades --------------------------------------------------------- #
     @staticmethod
-    def _guardar_secuencia(escritor: EscritorCSV, muestra_id: int,
+    def _guardar_secuencia(escritor: EscritorCSV, sample_id: str,
                            secuencia_multi, label: str) -> int:
         filas = 0
         for i, multi in enumerate(secuencia_multi):
-            filas += escritor.escribir_multiframe(muestra_id, i, multi, label)
+            filas += escritor.escribir_multiframe(sample_id, i, multi, label)
         return filas
 
     def _imprimir_ayuda(self) -> None:
+        print(f"  Señante de esta sesión: {self.senante}")
         print("  Teclas: [0-9] elegir glosa | [q]/[ESC] salir")
         for i, g in enumerate(self.glosas):
             print(f"    {i} = {g}")

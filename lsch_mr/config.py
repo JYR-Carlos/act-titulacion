@@ -75,6 +75,26 @@ REST_MIN_FRAMES_SENA = 5        # secuencias más cortas se descartan como ruido
 CONF_THRESHOLD = 0.60           # bajo este umbral -> "fuera de vocabulario"
 
 # --------------------------------------------------------------------------- #
+# Métricas de éxito del MVP (Secciones 11 y 12 del diseño)
+# --------------------------------------------------------------------------- #
+# Latencia end-to-end: desde que la seña termina realmente hasta que el subtítulo
+# queda dibujado. Incluye el retardo de segmentación (REST_FRAMES_FIN frames de
+# reposo sostenido), que es inherente al diseño: no se puede descontar de una
+# medición honesta porque el sistema no sabe que la seña terminó hasta confirmarlo.
+LATENCIA_MAX_MS = 500.0
+
+# Muestras mínimas por glosa en el corpus (Sección 12).
+CORPUS_MIN_MUESTRAS_POR_CLASE = 50
+
+# Identificador del señante en una sesión de grabación. Va como primer campo del
+# `sample_id`, que es lo que permite evaluar dejando señantes fuera
+# (`entrenar.py --cv-grupos 1`). No se puede reconstruir después de grabar.
+SENANTE_POR_DEFECTO = "s01"
+
+# Accuracy mínima de clasificación para dar el MVP por cumplido (Sección 11).
+ACCURACY_OBJETIVO = 0.85
+
+# --------------------------------------------------------------------------- #
 # Entrenamiento (ModelTrainer) / TCN
 # --------------------------------------------------------------------------- #
 TCN_FILTROS = 64

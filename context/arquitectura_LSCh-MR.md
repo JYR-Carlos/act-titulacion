@@ -9,6 +9,8 @@
 
 El sistema adopta una **arquitectura en capas con procesamiento en el borde (Edge Computing)**: todo el procesamiento ocurre localmente en el dispositivo, sin dependencia de red ni servicios cloud. La comunicación entre capas se realiza exclusivamente mediante **llamadas en memoria** (interfaces C# en runtime), sin protocolos de red ni IPC distribuido.
 
+**Alcance del principio "sin red".** Aplica a la comunicación **entre capas** y a la inferencia: ninguna capa consulta un servicio remoto, y no existe puente por MQTT/gRPC/REST entre componentes. No aplica a la **fuente de imagen**: durante el desarrollo se admite usar la cámara de un teléfono como sustituto de webcam mediante un stream MJPEG local, que ocupa el lugar del hardware de captura y no forma parte del camino de producción. Un puente de red entre capas sí violaría este principio.
+
 ---
 
 ## 2. Plataforma de Despliegue
@@ -22,6 +24,14 @@ La migración al visor consiste únicamente en reemplazar:
 - Canal de presentación: ventana en monitor → Spatial UI en Unity (Realidad Mixta)
 
 Las capas de preprocesamiento e inferencia no requieren modificación en la migración.
+
+### Alcance de la demostración (decisión 2026-07-21)
+La demostración del MVP se hace **solo con cámara**: el Meta Quest 3 deja de estar en el camino crítico. El runtime demostrable es **Unity + Sentis sobre PC con webcam**, conservando el `modelo.onnx` como único punto de acoplamiento. Quedan fuera del alcance demostrable —y por tanto no verificables en este informe— la integración con Meta XR SDK, la medición en Snapdragon XR2 y el subtítulo espacial anclado al rostro.
+
+Consecuencia para la Capa 1: `HandTrackingProvider` debe reimplementarse en Unity sobre webcam; el contrato `getFrame()` se mantiene y solo cambia la implementación, que es exactamente lo que prevé la Sección 8.2.
+
+### Alcance de este documento respecto a los repositorios
+El sistema vive en **dos repositorios**: el subsistema de IA/datos en Python (Juan Yampara) y el runtime Unity/C# (Capa 4, Tomás Silva). Las afirmaciones de conformidad entre diseño e implementación de este documento están verificadas **solo contra el repositorio de IA/datos**. La Capa 4 (`SpatialSubtitleRenderer`, Spatial UI, render Unity) debe auditarse por separado antes de afirmar que los diagramas coinciden con la totalidad del software desarrollado.
 
 ---
 
@@ -80,6 +90,15 @@ Normaliza geométricamente los keypoints crudos para producir un vector invarian
 keypoint_norm = (keypoint_raw - wrist_position) / dist(wrist, middle_finger_mcp)
 ```
 
+En casos degenerados (mano colapsada, `dist ≈ 0`) el normalizador devuelve un vector de ceros en vez de dividir por cero.
+
+**Ensamblado y remuestreo (frontera Capa 2 → Capa 3).** Antes de entrar al clasificador, la secuencia de `NormVector` pasa por dos pasos adicionales:
+
+1. **Ensamblado según el modo de manos** (ver punto abierto en la Sección 6): una mano → 63 dim; dos manos → 126 dim concatenando `[Left | Right]`, con la mano ausente rellenada con ceros.
+2. **Remuestreo temporal a `SEQ_LEN = 60` frames** por interpolación lineal. Da una entrada de forma fija —Unity Sentis prefiere formas estáticas— e independiente de la duración real de la seña.
+
+El detalle exacto de ambos pasos, junto con los vectores de prueba para portarlos a C#, está en `INTEGRACION_UNITY.md`.
+
 ### Capa 3 — Inferencia (Edge AI)
 Recibe la `SignSequence` (secuencia de `NormVector` correspondiente a una seña segmentada) y emite la etiqueta de texto traducida.
 
@@ -106,8 +125,8 @@ Corre fuera del sistema en tiempo real, en entorno Python. Produce el `OnnxModel
 
 | Clase | Responsabilidad |
 |---|---|
-| `DatasetRecorder` | Orquesta grabación + etiquetado. Exporta CSV con esquema `frame_idx, x0..x20, y0..y20, z0..z20, label`. Metas: ≥50 muestras/seña, 10 señas, ≥2 señantes. |
-| `ModelTrainer` | Entrena modelo TCN sobre el CSV. Produce objeto `Metrics` (accuracy global + matriz de confusión). Atributo `architecture = "TCN"`. Split: 80% train / 20% test con validación cruzada. |
+| `DatasetRecorder` | Orquesta grabación + etiquetado. Exporta CSV crudo (esquema en la Sección 6). Metas: ≥50 muestras/seña, 10 señas, ≥2 señantes. El gate de muestras mínimas lo aplica `build_dataset.py` al construir el dataset. |
+| `ModelTrainer` | Entrena modelo TCN. Produce objeto `Metrics` (accuracy + matriz de confusión), atributo `architecture = "TCN"`. **Dos modos con propósitos distintos:** `train()` hace un split estratificado 80/20 con early stopping y produce el **modelo exportable**; `evaluar_cv()` hace **validación cruzada estratificada k-fold** (k=5) y produce la **métrica reportable** (accuracy media ± desviación estándar + matriz de confusión out-of-fold). Con corpus pequeño el 80/20 deja pocas muestras de validación por clase, así que la cifra que se reporta es la de k-fold. |
 | `ModelExporter` | Exporta modelo a `OnnxModel`. Ejecuta `validateOperators()` para verificar compatibilidad ONNX/Unity Sentis (`sentisCompatible = true`) antes de habilitar el modelo para runtime. |
 
 ---
@@ -118,12 +137,33 @@ Corre fuera del sistema en tiempo real, en entorno Python. Produce el `OnnxModel
 |---|---|---|
 | `Keypoint` | Coordenada articular cruda `(x, y, z)` | 3 valores float |
 | `Frame` | Snapshot de una mano: exactamente 21 `Keypoint` | 63 valores float |
+| `HandFrame` | Realización concreta de `Frame`: landmarks + handedness (`Left`/`Right`) + score de handedness + timestamp | 21×3 + metadatos |
+| `MultiHandFrame` | Detección de un frame completo: 0, 1 o 2 `HandFrame`. Es lo que devuelve `getFrame()` | 0–2 manos |
 | `NormVector` | Keypoints normalizados (salida de `KeypointNormalizer`) | 63 dim |
-| `SignSequence` | Secuencia temporal de `NormVector` correspondiente a una seña | 1 a 60 frames |
-| `SignEvent` | Evento emitido por `RestStateDetector` (INICIO o FIN de seña) | — |
+| `SignSequence` | Secuencia temporal correspondiente a una seña | T frames (variable) |
+| `EntradaModelo` | `SignSequence` ensamblada y remuestreada, lista para el clasificador | 60 × 63 (o 60 × 126) |
+| `SignEvent` | Evento emitido por `RestStateDetector` | — |
 | `ClassResult` | Etiqueta de texto + score de confianza (salida de `SignClassifier`) | — |
 | `OnnxModel` | Artefacto compartido entre pipeline offline (lo produce) y runtime (lo consume) | — |
-| `DatasetCSV` | Archivo CSV con esquema `frame_idx, x0..x20, y0..y20, z0..z20, label` | 63 valores norm/frame |
+| `DatasetCSV` | CSV crudo: `sample_id, frame_idx, hand, handedness_score, x0..x20, y0..y20, z0..z20, label` | 63 valores crudos/mano/frame |
+
+**Nota sobre `SignSequence` y los 60 frames.** La captura **no** está acotada a 60 frames: el `RestStateDetector` acumula tantos frames como dure la seña. Los 60 son la longitud fija a la que el remuestreo temporal lleva cualquier secuencia antes de la inferencia (Sección 4, Capa 2). Una seña más larga se comprime, no se trunca.
+
+**Nota sobre el `DatasetCSV`.** El CSV crudo guarda coordenadas **sin normalizar** —la normalización se aplica al construir el dataset, no al grabar— y añade tres columnas que el esquema mínimo no contemplaba pero que son funcionalmente necesarias: `sample_id` (agrupa los frames de una misma muestra), `hand` y `handedness_score` (permiten reconstruir la mano dominante y el modo de dos manos a partir del mismo archivo).
+
+### Punto abierto — una mano vs. dos manos
+
+El sistema soporta **ambos modos**, configurables (`MODO_MANOS`), sin que el `KeypointNormalizer` cambie (siempre produce 63 dim por mano); lo que cambia es el ensamblado del vector de entrada:
+
+| Modo | Entrada al clasificador | Cuándo conviene |
+|---|---|---|
+| `dominante` | 60 × 63 | Vocabulario de señas mayoritariamente de una mano. |
+| `ambas` | 60 × 126, orden `[Left \| Right]`, mano ausente → ceros | Vocabulario con señas bimanuales. |
+
+La decisión definitiva depende de cuántas de las 10 glosas del corpus sean bimanuales, y debe respaldarse con la métrica k-fold de ambos modos sobre el mismo corpus.
+
+### Nomenclatura
+Los métodos citados como contrato (`getFrame()`, `appendWord()`, `validateOperators()`) conservan su nombre literal en la implementación. Los **atributos** siguen PEP 8 en Python: `confThreshold` es `conf_threshold`, `maxWords` es `max_words`, `continuityTimeout` es `continuity_timeout`. La diferencia es de convención de lenguaje, no de diseño.
 
 ---
 
@@ -142,12 +182,17 @@ Corre fuera del sistema en tiempo real, en entorno Python. Produce el `OnnxModel
     └─────────── [CAPTURANDO] ──────────────────────────────────
 ```
 
-Estados: `Reposo`, `Capturando`
-Eventos de salida: `FIN` (dispara `SignSequence` a `SignClassifier`), `EX-01` (descarta y resetea)
+Estados: `Reposo`, `Capturando` (exactamente dos).
+
+Eventos de salida: `IDLE`, `START`, `CAPTURING`, `END` (dispara `SignSequence` a `SignClassifier`), `DISCARDED` (EX-01: pérdida de tracking o seña más corta que el mínimo). Los cinco valores existen para que el orquestador pueda dar retroalimentación visual del estado; solo `END` y `DISCARDED` alteran la máquina de estados de dos estados.
+
+Ambas transiciones exigen evidencia **sostenida**, no un único frame: `REST_FRAMES_INICIO = 3` frames de movimiento para abrir la captura y `REST_FRAMES_FIN = 6` frames de reposo para cerrarla. Los frames de reposo finales se recortan de la secuencia antes de clasificar.
 
 ### 7.2 MessageComposer (buffer de composición)
 
 El buffer transita por estados de composición activa, espera de continuidad, y cierre de mensaje (timeout o gesto de reset manual). El gesto de reinicio manual activa el flujo alternativo FA-01 de CU-03 y limpia el buffer de forma anticipada.
+
+**Implementación del timeout.** No hay hilo ni temporizador activo: el cierre por expiración se evalúa (a) al llegar la siguiente palabra y (b) en la llamada `tick()` que el orquestador hace una vez por frame. El efecto observable es el que describe el diseño —el mensaje se cierra al expirar el timer, sin necesidad de que el usuario siga señando— pero la comprobación es síncrona con el bucle de render, no asíncrona.
 
 ---
 
@@ -199,16 +244,31 @@ El buffer transita por estados de composición activa, espera de continuidad, y 
 | **Juan Yampara** (IA y datos) | `HandTrackingProvider`, `RestStateDetector`, `KeypointNormalizer`, `SignClassifier`, `DatasetRecorder`, `ModelTrainer`, `ModelExporter` |
 | **Tomás Silva** (Unity/XR) | `MessageComposer`, `SpatialSubtitleRenderer`, rendering Unity, Spatial UI |
 
+**Orquestador de referencia.** El diseño nombra los componentes pero no el elemento que los encadena en runtime. En el repositorio de IA/datos ese papel lo cumple `demo_vivo.py`: instancia las cuatro capas, ejecuta el bucle captura → segmentación → normalización → inferencia → composición y dibuja el subtítulo. Es la **implementación de referencia de CU-01 + CU-03** y el banco de pruebas contra el que debe contrastarse el orquestador equivalente en Unity; no es el entregable final.
+
+El repositorio de IA/datos incluye también una copia de validación de `MessageComposer` en Python, para poder probar CU-03 sin la capa Unity. La versión productiva es la de Tomás.
+
+**Contrato entre repositorios.** El acoplamiento es solo por archivos (`modelo.onnx` + `labels.json`), nunca por red. La especificación para portar el preprocesamiento a C#, junto con vectores de prueba dorados que detectan divergencias, está en `INTEGRACION_UNITY.md`.
+
 ---
 
 ## 11. Métricas de Éxito del MVP
 
-| Métrica | Umbral |
-|---|---|
-| Accuracy de clasificación | ≥ 85% |
-| Latencia end-to-end (captura → subtítulo) | ≤ 500 ms |
-| FPS de renderizado sostenido | ≥ 72 FPS |
-| Task Success Rate (escenario ventanilla) | ≥ 80% en ≥ 10 pruebas |
+| Métrica | Umbral | Cómo se mide |
+|---|---|---|
+| Accuracy de clasificación | ≥ 85% | Media de la validación cruzada k-fold **dejando señantes fuera** (ver nota). |
+| Latencia end-to-end (captura → subtítulo) | ≤ 500 ms | Medida en el orquestador y contrastada contra `LATENCIA_MAX_MS`. |
+| FPS de renderizado sostenido | ≥ 72 FPS | Capa 4 (Unity); no medible desde el subsistema de IA/datos. |
+| Task Success Rate (escenario ventanilla) | ≥ 80% en ≥ 10 pruebas | Pruebas con usuarios, posteriores al corpus. |
+
+**Qué incluye la latencia end-to-end.** El presupuesto de 500 ms se mide desde que la seña termina realmente hasta que el subtítulo queda dibujado, y se compone de:
+
+1. **Retardo de segmentación** — los `REST_FRAMES_FIN = 6` frames de reposo que el detector necesita para confirmar el fin de la seña. A 30 FPS son ~200 ms, y es la parte dominante del presupuesto. Es inherente al diseño: el sistema no puede saber que la seña terminó antes de confirmarlo.
+2. **Preprocesamiento** — normalización, ensamblado y remuestreo de la secuencia.
+3. **Inferencia** — ejecución del ONNX (~3,5 ms en CPU de PC).
+4. **Composición y render** del subtítulo.
+
+Medir solo (3) daría una cifra irrelevante frente al umbral. La medición debe reportar el total.
 
 ---
 
@@ -216,15 +276,21 @@ El buffer transita por estados de composición activa, espera de continuidad, y 
 
 - **10 señas dinámicas** del vocabulario transaccional GORE (trámite, documento, firma, identidad, esperar, etc.)
 - **≥ 50 muestras por seña**, ≥ 2 señantes nativos de LSCh
-- **Formato CSV:** `frame_idx, x0..x20, y0..y20, z0..z20, label` (63 valores normalizados / frame)
-- Split: 80% entrenamiento / 20% test con validación cruzada
-- Referencia de validación de pipeline: dataset **SWL-LSE** (Zenodo, CC BY 4.0, 300 señas dinámicas aisladas)
+- **Formato CSV crudo:** `sample_id, frame_idx, hand, handedness_score, x0..x20, y0..y20, z0..z20, label` (63 valores **sin normalizar** por mano y frame; la normalización se aplica al construir el dataset)
+- **Evaluación:** split 80/20 estratificado para producir el modelo exportable, y **validación cruzada estratificada k-fold (k=5)** para la cifra de accuracy que se reporta
+- Referencias de validación de pipeline (no son corpus LSCh):
+  - **SWL-LSE** (Zenodo, CC BY 4.0): 300 señas sanitarias en LSE. Se usa su conjunto de vídeos de referencia, con **1 muestra por clase**, por lo que sirve para validar la cadena vídeo → keypoints → dataset, **no** para medir accuracy.
+  - **LSA64** (CC BY-NC-SA 4.0): 64 señas de lengua de señas argentina, 10 señantes × 5 repeticiones. Al tener 50 muestras por seña permite construir un corpus proxy **de la misma forma que el objetivo** (10 clases × 50 muestras) y obtener una medida de accuracy honesta del pipeline mientras el corpus LSCh no está grabado. Sus señantes graban con **guantes de colores**, condición adversa para un detector entrenado sobre manos desnudas: la cifra obtenida sobre este corpus es una **cota inferior** del desempeño del pipeline, no una estimación centrada.
+
+En ambos casos los keypoints se **re-extraen con la Capa 1 propia**; no se reutilizan los keypoints ni el preprocesamiento de terceros (ver `DECISION_PREPROCESAMIENTO.md`).
 
 ---
 
 ## 13. Limitaciones Declaradas del Diseño
 
 - Corpus de señante único en fase MVP → requiere documentación explícita de esta limitación en el informe académico.
+- Mientras el corpus LSCh no esté grabado, las cifras de accuracy provienen de un **corpus proxy** (LSA64, lengua de señas argentina) de la misma forma que el objetivo. Miden la capacidad del pipeline, **no** el desempeño sobre LSCh: no deben presentarse como resultado del sistema final.
+- La conformidad diseño↔implementación está verificada solo para el subsistema de IA/datos; la Capa 4 vive en otro repositorio y requiere auditoría propia.
 - Vocabulario cerrado de 10 señas; ampliación via Transfer Learning (FA-01 de CU-02).
 - El umbral `confThreshold` de `SignClassifier` debe calibrarse empíricamente sobre el corpus real.
 - La compatibilidad de operadores ONNX con Unity Sentis debe validarse con un modelo toy antes de la exportación final (`ModelExporter.validateOperators()`).
