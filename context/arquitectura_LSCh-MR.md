@@ -274,6 +274,10 @@ Medir solo (3) daría una cifra irrelevante frente al umbral. La medición debe 
 
 ## 12. Corpus LSCh (Dataset propio)
 
+> **Corpus efectivamente usado en el MVP (decisión 2026-07-26).** El equipo no tuvo acceso a señantes de LSCh, de modo que el corpus propio no llegó a grabarse y **el MVP se construye y valida sobre LSA64** (lengua de señas argentina): 10 señas × 10 señantes × 5 repeticiones, la misma forma que especifica esta sección. También se evaluó SWL-LSE (lengua de señas española), descartado porque no publica vídeo entrenable —solo keypoints ya extraídos, en esquema Holistic, cuyo uso reabriría `DECISION_PREPROCESAMIENTO.md`—. El vocabulario demostrado son las 10 señas de LSA64, no las glosas del catálogo LSCh, que quedan como vocabulario objetivo de diseño. **La generalización a LSCh no está probada y es trabajo futuro.** LSA64 es CC BY-NC-SA 4.0: atribución obligatoria, uso no comercial y derivados bajo la misma licencia.
+
+Especificación original del corpus (objetivo de diseño):
+
 - **10 señas dinámicas** del vocabulario transaccional GORE (trámite, documento, firma, identidad, esperar, etc.)
 - **≥ 50 muestras por seña**, ≥ 2 señantes nativos de LSCh
 - **Formato CSV crudo:** `sample_id, frame_idx, hand, handedness_score, x0..x20, y0..y20, z0..z20, label` (63 valores **sin normalizar** por mano y frame; la normalización se aplica al construir el dataset)
@@ -288,8 +292,9 @@ En ambos casos los keypoints se **re-extraen con la Capa 1 propia**; no se reuti
 
 ## 13. Limitaciones Declaradas del Diseño
 
-- Corpus de señante único en fase MVP → requiere documentación explícita de esta limitación en el informe académico.
-- Mientras el corpus LSCh no esté grabado, las cifras de accuracy provienen de un **corpus proxy** (LSA64, lengua de señas argentina) de la misma forma que el objetivo. Miden la capacidad del pipeline, **no** el desempeño sobre LSCh: no deben presentarse como resultado del sistema final.
+- **El sistema está validado sobre lengua de señas argentina (LSA64), no chilena.** Es la limitación principal del trabajo: por indisponibilidad de señantes de LSCh no existe corpus chileno, y ninguna cifra de este informe puede presentarse como desempeño sobre LSCh. Lo que se demuestra es que la arquitectura reconoce señas dinámicas aisladas con la accuracy objetivo; aplicarla a LSCh requiere grabar su corpus y repetir la evaluación, sin cambios de código previstos.
+- Las cifras son una **cota inferior**: los señantes de LSA64 graban con guantes de colores, condición adversa para un detector entrenado sobre manos desnudas.
+- El corpus tiene 10 señantes, pero de una sola lengua y un solo entorno de grabación (fondo, iluminación y encuadre uniformes). No hay evidencia sobre robustez a condiciones de ventanilla real.
 - La conformidad diseño↔implementación está verificada solo para el subsistema de IA/datos; la Capa 4 vive en otro repositorio y requiere auditoría propia.
 - Vocabulario cerrado de 10 señas; ampliación via Transfer Learning (FA-01 de CU-02).
 - El umbral `confThreshold` de `SignClassifier` debe calibrarse empíricamente sobre el corpus real.

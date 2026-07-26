@@ -72,7 +72,27 @@ REST_MIN_FRAMES_SENA = 5        # secuencias más cortas se descartan como ruido
 # --------------------------------------------------------------------------- #
 # Clasificación (SignClassifier)
 # --------------------------------------------------------------------------- #
-CONF_THRESHOLD = 0.60           # bajo este umbral -> "fuera de vocabulario"
+# Bajo este umbral la seña se reporta como "fuera de vocabulario" (FA-01).
+#
+# Calibrado el 2026-07-26 sobre las predicciones out-of-fold de la validación
+# por señante (483 muestras, LSA64). El compromiso medido fue:
+#
+#   umbral   cobertura   precisión   glosas erróneas mostradas
+#     0.60      96.3%       92.7%       34
+#     0.90      81.4%       95.9%       16     <- elegido
+#     0.95      75.4%       97.3%       10
+#     0.99      60.0%       99.3%        2
+#
+# Se elige 0.90 porque en ventanilla mostrar una glosa equivocada engaña al
+# funcionario, mientras que "no reconocida" solo pide repetir la seña; 0.99 daría
+# casi cero errores pero descarta 4 de cada 10 reconocimientos correctos y el
+# sistema parecería roto.
+#
+# OJO: el modelo está mal calibrado — la confianza mediana de sus predicciones
+# ERRÓNEAS es 0.85 y su p95 llega a 0.99. Por eso el umbral es un instrumento
+# romo: subirlo cuesta mucha cobertura y quita pocos errores. Corregirlo de raíz
+# (temperature scaling u otra calibración) queda como trabajo futuro.
+CONF_THRESHOLD = 0.90
 
 # --------------------------------------------------------------------------- #
 # Métricas de éxito del MVP (Secciones 11 y 12 del diseño)

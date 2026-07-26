@@ -44,6 +44,11 @@ class CVMetrics:
     # señante entero dentro de un solo fold. Ver evaluar_cv().
     esquema: str = "estratificado"
     n_grupos: int = 0
+    # Predicciones out-of-fold y su confianza, muestra a muestra. Se guardan
+    # para poder calibrar CONF_THRESHOLD sin volver a entrenar.
+    y_true: list[int] = field(default_factory=list)
+    y_pred: list[int] = field(default_factory=list)
+    confianzas: list[float] = field(default_factory=list)
 
     def resumen(self) -> str:
         return (f"{self.mean_accuracy:.3f} ± {self.std_accuracy:.3f} "
@@ -58,7 +63,9 @@ class CVMetrics:
                 "std_accuracy": self.std_accuracy,
                 "architecture": self.architecture,
                 "confusion_matrix": self.confusion_matrix,
-                "report": self.report}
+                "report": self.report,
+                "out_of_fold": {"y_true": self.y_true, "y_pred": self.y_pred,
+                                "confianzas": self.confianzas}}
 
 
 @dataclass
@@ -315,6 +322,10 @@ class ModelTrainer:
 
         fold_accs: list[float] = []
         y_pred_oof = np.zeros_like(y)   # predicción out-of-fold de cada muestra
+        # Confianza de la predicción out-of-fold. Es lo que permite calibrar
+        # CONF_THRESHOLD sobre datos que el modelo no vio: con las confianzas
+        # del propio conjunto de entrenamiento el umbral sale siempre optimista.
+        conf_oof = np.zeros(len(y), dtype="float32")
 
         for k, (idx_tr, idx_va) in enumerate(skf.split(X, y, groups), start=1):
             # Semilla distinta por fold pero determinista: reproducible sin que
@@ -330,8 +341,10 @@ class ModelTrainer:
                        epochs=self.epochs, batch_size=self.batch_size,
                        callbacks=self._callbacks(), verbose=verbose)
 
-            pred = np.argmax(modelo.predict(X[idx_va], verbose=0), axis=1)
+            probs = modelo.predict(X[idx_va], verbose=0)
+            pred = np.argmax(probs, axis=1)
             y_pred_oof[idx_va] = pred
+            conf_oof[idx_va] = np.max(probs, axis=1)
             acc = float(np.mean(pred == y[idx_va]))
             fold_accs.append(acc)
             print(f"[cv] fold {k}/{n_splits}: accuracy={acc:.3f} "
@@ -360,7 +373,9 @@ class ModelTrainer:
             mean_accuracy=float(np.mean(fold_accs)),
             std_accuracy=float(np.std(fold_accs)),
             classes=classes, confusion_matrix=cm.tolist(), report=report,
-            confusion_png=str(cm_png), esquema=esquema, n_grupos=n_grupos)
+            confusion_png=str(cm_png), esquema=esquema, n_grupos=n_grupos,
+            y_true=y.tolist(), y_pred=y_pred_oof.tolist(),
+            confianzas=[float(c) for c in conf_oof])
 
         metrics_path = reports_dir / f"cv_metrics{sufijo}.json"
         metrics_path.write_text(

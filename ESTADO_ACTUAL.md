@@ -46,13 +46,27 @@ SignClassifier (onnxruntime, ~3.5 ms/inferencia) → MessageComposer
 - `python generar_vectores_dorados.py --verificar` comprueba que el
   preprocesamiento no cambió respecto a los vectores de referencia del port a C#.
 
-## Validación con corpus proxy (LSA64) — 2026-07-26
+## Corpus del MVP: LSA64 — decisión del 2026-07-26
 
-Como el corpus LSCh aún no está grabado, el pipeline se midió sobre un **corpus
-proxy** construido desde **LSA64** (lengua de señas argentina): 10 señas × 10
-señantes × 5 repeticiones = **500 vídeos**, exactamente la forma del corpus
-objetivo del MVP. Los keypoints se re-extrajeron con nuestra propia Capa 1
-(`extraer_lote.py`); 483 de los 500 vídeos dieron detección.
+**El corpus del MVP es LSA64 (lengua de señas argentina), no LSCh.** El equipo no
+tiene acceso a señantes de Lengua de Señas Chilena, así que grabar el corpus
+propio quedó descartado. Se evaluó también SWL-LSE (lengua de señas española),
+pero **no publica vídeo entrenable**: de sus 8.000 secuencias solo comparte
+keypoints ya extraídos, en esquema Holistic, y usarlos reabriría
+`DECISION_PREPROCESAMIENTO.md`. LSA64 sí trae vídeo, así que los keypoints se
+extraen con nuestra propia Capa 1 y esa decisión sigue intacta.
+
+Corpus: 10 señas × 10 señantes × 5 repeticiones = **500 vídeos**, exactamente la
+forma que el diseño pedía para el corpus LSCh (10 clases × 50 muestras).
+Keypoints re-extraídos con `extraer_lote.py`; 483 de los 500 con detección.
+
+> **Consecuencia para el informe, a declarar explícitamente:** el sistema está
+> validado sobre **lengua de señas argentina**, no chilena. El vocabulario
+> demostrado son las 10 señas de LSA64 (`Thanks`, `Help`, `Name`, …), no las 10
+> glosas de `Glosas_LSCh_Mappeadas.csv`, que siguen siendo el vocabulario
+> *objetivo de diseño*. La generalización a LSCh **no está probada** y es trabajo
+> futuro. LSA64 es CC BY-NC-SA 4.0: exige atribución, prohíbe uso comercial y
+> obliga a licenciar los derivados —el modelo incluido— en los mismos términos.
 
 | Modo | k-fold estratificado | **k-fold por señante** |
 |---|---|---|
@@ -73,9 +87,24 @@ objetivo del MVP. Los keypoints se re-extrajeron con nuestra propia Capa 1
 3. **Es una cota inferior.** Los señantes de LSA64 graban con **guantes de
    colores** y MediaPipe está entrenado sobre manos desnudas. Los 17 vídeos sin
    detección se concentran en `Patience` (14, mano de canto sobre la cara) y
-   `Appear` (3).
-4. **No es LSCh.** Son señas argentinas etiquetadas con sus nombres originales.
-   Mide la capacidad del pipeline, no el desempeño sobre el vocabulario objetivo.
+   `Appear` (3). Con manos desnudas el pipeline debería ir mejor, no peor.
+
+**`CONF_THRESHOLD` calibrado: 0.60 → 0.90.** Sobre las predicciones out-of-fold
+de la validación por señante, el compromiso medido fue:
+
+| Umbral | Cobertura | Precisión | Glosas erróneas mostradas |
+|---|---|---|---|
+| 0.60 | 96.3% | 92.7% | 34 |
+| **0.90** | **81.4%** | **95.9%** | **16** |
+| 0.95 | 75.4% | 97.3% | 10 |
+| 0.99 | 60.0% | 99.3% | 2 |
+
+Se elige 0.90: en ventanilla, mostrar una glosa equivocada engaña, mientras que
+"no reconocida" solo pide repetir. **El modelo está mal calibrado** —la confianza
+mediana de sus predicciones erróneas es 0.85 y su p95 llega a 0.99—, así que el
+umbral es un instrumento romo. Corregirlo de raíz (temperature scaling) es
+trabajo futuro; hacerlo cambiaría el contrato con Unity, porque hoy el softmax
+va dentro del grafo ONNX.
 
 **Punto abierto — una mano vs. dos manos.** Los dos modos son
 **indistinguibles**: 0.903 ± 0.054 vs 0.911 ± 0.056, con las diferencias muy
@@ -87,19 +116,20 @@ comparación se re-corre con un comando (`entrenar.py --cv-grupos 1` en ambos
 modos) y debe revisarse con sus propios datos, que sí pueden tener señas
 bimanuales que la mano dominante no distinga.
 
-## Lo que falta (crítico)
+## Lo que falta
 
-- **El corpus real de las 10 glosas LSCh no se ha grabado** — `data/raw/` solo
-  contiene el CSV de LSA64. Sin él no hay accuracy sobre LSCh, ni `CONF_THRESHOLD`
-  calibrado, ni modelo final, ni Task Success Rate. Es trabajo físico: sesión con
-  señante(s), ~2 h, ≥50 muestras/glosa, ≥2 señantes.
-- **Pruebas con usuarios** (TSR ≥80% en ≥10 pruebas) — posteriores al corpus.
-- **Capa 4 / Unity** — sin auditar; vive en el repo de Tomás.
+- **Latencia end-to-end: medida, no cumplida.** Sobre 10 vídeos: mediana ~239 ms,
+  rango 171–547 ms, **1 de 9 por encima de los 500 ms**. Y esos vídeos son de
+  60 FPS: a 30 FPS el retardo de segmentación se duplica (~200 ms) y varios casos
+  quedarían al borde. Falta una corrida sostenida con la cámara del demo. Palanca
+  si sale corta: bajar `REST_FRAMES_FIN` de 6 a 4, a costa de cerrar señas antes.
+- **Capa 4 / Unity** — no existe todavía; el contrato y los vectores dorados sí.
+- **Pruebas con usuarios** (TSR ≥80% en ≥10 pruebas).
 
-> **Antes de grabar:** usar `grabar_corpus.py --senante s01` (y `s02`, …) con un
-> identificador distinto por persona. El señante queda dentro del `sample_id` y es
-> lo único que permite después la validación por señante — **no se puede
-> reconstruir a posteriori**.
+> **Si algún día se graba corpus propio:** usar `grabar_corpus.py --senante s01`
+> (y `s02`, …) con un identificador distinto por persona. El señante queda dentro
+> del `sample_id` y es lo único que permite después la validación por señante —
+> **no se puede reconstruir a posteriori**.
 
 ## Riesgos abiertos (lado Unity, fuera de este repo)
 
@@ -162,7 +192,7 @@ outputs/                     modelo, labels y reportes (no versionado)
 
 ## Próximo paso recomendado
 
-Grabar el corpus real de las 10 glosas LSCh (`grabar_corpus.py --senante sNN`,
-≥50 muestras/glosa, ≥2 señantes), y repetir la cadena
-`build_dataset.py --estricto` → `entrenar.py --cv-grupos 1` → `exportar_onnx.py`
-→ `demo_vivo.py`. El pipeline ya está medido y no debería requerir cambios.
+Con el corpus ya resuelto, lo que queda del lado de IA/datos es cerrar las dos
+métricas pendientes: calibrar `CONF_THRESHOLD` con las confianzas out-of-fold y
+medir la latencia en una sesión sostenida con la cámara real del demo. El resto
+del avance del MVP depende de la Capa 4 en Unity.

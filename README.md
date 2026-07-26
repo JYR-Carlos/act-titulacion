@@ -216,13 +216,19 @@ python build_dataset.py --entrada data/raw/swl_ref.csv --modo ambas
 `extraer_lote.py` es genérico (mapea etiquetas desde un CSV `FILENAME,LABEL` o
 del nombre de archivo), así que sirve igual para **LSA64**.
 
-### Corpus proxy con LSA64 (mientras no exista el corpus LSCh)
+### El corpus del MVP: LSA64
 
-**LSA64** (lengua de señas argentina, CC BY-NC-SA 4.0) trae 64 señas × 10
-señantes × 5 repeticiones = **50 muestras por seña**. Tomando 10 señas se obtiene
-un corpus con **exactamente la misma forma que el objetivo del MVP**
-(10 clases × 50 muestras), lo que permite medir accuracy de verdad antes de tener
-grabado el corpus LSCh.
+> **Decisión del 2026-07-26: el corpus del MVP es LSA64, lengua de señas
+> argentina.** El equipo no tuvo acceso a señantes de LSCh, así que el corpus
+> propio no se grabó. SWL-LSE (lengua de señas española) se descartó porque **no
+> publica vídeo entrenable**: de sus 8.000 secuencias solo comparte keypoints ya
+> extraídos, en esquema Holistic, y usarlos reabriría
+> `DECISION_PREPROCESAMIENTO.md`. LSA64 sí trae vídeo, así que los keypoints se
+> extraen con nuestra propia Capa 1.
+
+**LSA64** (CC BY-NC-SA 4.0) trae 64 señas × 10 señantes × 5 repeticiones =
+**50 muestras por seña**. Tomando 10 señas se obtiene un corpus con
+**exactamente la forma que el diseño pedía** (10 clases × 50 muestras).
 
 ```powershell
 python extraer_lote.py `
@@ -237,8 +243,11 @@ python entrenar.py --cv
 > ⚠️ **Las etiquetas son las señas originales de LSA64, no glosas LSCh.** Las 10
 > clases se eligieron por paralelo semántico con el vocabulario objetivo
 > (`Thanks`↔GRACIAS, `Help`↔AYUDA, `Name`↔NOMBRE, …), pero son señas argentinas.
-> La cifra resultante mide **la capacidad del pipeline**, no el desempeño sobre
-> LSCh, y así debe presentarse en el informe.
+> El sistema está validado sobre **lengua de señas argentina**; la generalización
+> a LSCh no está probada y es la limitación principal a declarar en el informe.
+> `Glosas_LSCh_Mappeadas.csv` sigue siendo el vocabulario *objetivo de diseño*,
+> no el demostrado. La licencia CC BY-NC-SA 4.0 exige atribución, prohíbe uso
+> comercial y obliga a licenciar los derivados —el modelo incluido— igual.
 
 **Resultados obtenidos (2026-07-26)** sobre 483 de 500 vídeos con detección:
 

@@ -14,7 +14,7 @@
    "Left",
    "Right"
   ],
-  "CONF_THRESHOLD": 0.6
+  "CONF_THRESHOLD": 0.9
  },
  "casos": [
   {
