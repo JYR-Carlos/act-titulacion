@@ -49,6 +49,8 @@ class CVMetrics:
     y_true: list[int] = field(default_factory=list)
     y_pred: list[int] = field(default_factory=list)
     confianzas: list[float] = field(default_factory=list)
+    # Trazabilidad: de qué corrida salió esta cifra. Ver _metadatos_corrida().
+    corrida: dict = field(default_factory=dict)
 
     def resumen(self) -> str:
         return (f"{self.mean_accuracy:.3f} ± {self.std_accuracy:.3f} "
@@ -58,6 +60,9 @@ class CVMetrics:
         return {"n_splits": self.n_splits,
                 "esquema": self.esquema,
                 "n_grupos": self.n_grupos,
+                # Primero, para que se vea al abrir el archivo: sin saber de qué
+                # corrida salió, una cifra con ±0.01 de ruido no es rastreable.
+                "corrida": self.corrida,
                 # Se guardan para que el JSON se baste solo: `evaluar_modelo.py
                 # --fuente cv` reconstruye el reporte sin tener que adivinar el
                 # orden de las clases desde labels.json (que puede haber sido
@@ -334,6 +339,88 @@ class ModelTrainer:
             tabla.append(perfil)
         return tabla
 
+    # -- Trazabilidad de la corrida ------------------------------------------ #
+    @staticmethod
+    def _git_estado() -> dict:
+        """SHA del commit y si el árbol tenía cambios sin commitear.
+
+        Sin el SHA, una cifra del informe no se puede atar al código que la
+        produjo. El flag `sucio` importa tanto como el SHA: una corrida hecha
+        sobre cambios sin commitear no es reproducible desde el repositorio.
+        """
+        import subprocess
+        try:
+            def _git(*args):
+                return subprocess.run(("git",) + args, cwd=config.RAIZ,
+                                      capture_output=True, text=True,
+                                      timeout=10).stdout.strip()
+            sha = _git("rev-parse", "HEAD")
+            if not sha:
+                return {"commit": None, "sucio": None}
+            return {"commit": sha,
+                    "commit_corto": sha[:12],
+                    "sucio": bool(_git("status", "--porcelain"))}
+        except Exception:
+            # Un repo sin git no debe impedir entrenar.
+            return {"commit": None, "sucio": None}
+
+    @staticmethod
+    def _versiones() -> dict:
+        """Versiones de las librerías que pueden mover la cifra."""
+        import platform
+        from importlib.metadata import PackageNotFoundError, version
+
+        v = {"python": platform.python_version()}
+        for paquete in ("numpy", "tensorflow", "keras", "scikit-learn"):
+            try:
+                v[paquete] = version(paquete)
+            except PackageNotFoundError:
+                v[paquete] = None
+        return v
+
+    def _metadatos_corrida(self, X: np.ndarray, y: np.ndarray,
+                           etiqueta: str, esquema: str, n_splits: int,
+                           n_grupos: int, splits: list[dict]) -> dict:
+        """Todo lo que hace falta para atar esta cifra a una corrida concreta.
+
+        El entrenamiento de Keras no es bit-determinista aunque se fije la
+        semilla: con los mismos splits, la misma configuración ha dado 0.903,
+        0.911, 0.915 y 0.920. El objetivo no es eliminar ese ruido —no se
+        puede— sino que cada número del informe se pueda rastrear hasta la
+        corrida que lo produjo, con su código, sus datos y sus splits.
+        """
+        import hashlib
+        from datetime import datetime, timezone
+
+        return {
+            "timestamp_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "git": self._git_estado(),
+            "versiones": self._versiones(),
+            "modo_manos": etiqueta or None,
+            "esquema": esquema,
+            "n_splits": n_splits,
+            "n_grupos": n_grupos,
+            "semilla": self.seed,
+            "hiperparametros": {"epochs": self.epochs,
+                                "batch_size": self.batch_size,
+                                "lr": self.lr,
+                                "arquitectura": config.ARQUITECTURA},
+            "dataset": {
+                "n_muestras": int(X.shape[0]),
+                "seq_len": int(X.shape[1]),
+                "n_features": int(X.shape[2]),
+                "n_clases": int(len(np.unique(y))),
+                # Identifica los datos exactos sin guardarlos: dos corridas con
+                # el mismo sha1 vieron el mismo dataset, aunque el archivo se
+                # haya renombrado o regenerado.
+                "sha1_X": hashlib.sha1(
+                    np.ascontiguousarray(X, dtype="float32").tobytes()).hexdigest(),
+            },
+            # Los splits son lo que permite repetir la evaluación sobre el mismo
+            # reparto y separar el ruido de entrenamiento del ruido de partición.
+            "splits": splits,
+        }
+
     @staticmethod
     def split_indices(y: np.ndarray,
                       n_clases: int,
@@ -540,8 +627,21 @@ class ModelTrainer:
         # CONF_THRESHOLD sobre datos que el modelo no vio: con las confianzas
         # del propio conjunto de entrenamiento el umbral sale siempre optimista.
         conf_oof = np.zeros(len(y), dtype="float32")
+        splits: list[dict] = []
 
         for k, (idx_tr, idx_va) in enumerate(skf.split(X, y, groups), start=1):
+            # Qué se dejó fuera en este fold. Con `groups`, los identificadores
+            # de señante son más legibles que los índices y son lo que hay que
+            # mirar para confirmar que el fold es realmente independiente.
+            splits.append({
+                "fold": k,
+                "n_train": int(len(idx_tr)),
+                "n_val": int(len(idx_va)),
+                "grupos_fuera": (sorted({str(g) for g in np.asarray(groups)[idx_va]})
+                                 if groups is not None else []),
+                "val_indices": [int(i) for i in idx_va],
+            })
+
             # Semilla distinta por fold pero determinista: reproducible sin que
             # los k modelos partan de la misma inicialización.
             tf.random.set_seed(self.seed + k)
@@ -598,7 +698,9 @@ class ModelTrainer:
             classes=classes, confusion_matrix=cm.tolist(), report=report,
             confusion_png=str(cm_png), esquema=esquema, n_grupos=n_grupos,
             y_true=y.tolist(), y_pred=y_pred_oof.tolist(),
-            confianzas=[float(c) for c in conf_oof])
+            confianzas=[float(c) for c in conf_oof],
+            corrida=self._metadatos_corrida(X, y, etiqueta, esquema, n_splits,
+                                            n_grupos, splits))
 
         metrics_path = reports_dir / f"cv_metrics{sufijo}.json"
         metrics_path.write_text(
