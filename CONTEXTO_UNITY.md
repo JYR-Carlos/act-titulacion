@@ -191,14 +191,19 @@ datos reales, no es arbitrario:
 
 | Umbral | Cobertura | Precisión | Glosas erróneas mostradas |
 |---|---|---|---|
-| 0.60 | 96.3% | 92.7% | 34 |
-| **0.90** | **81.4%** | **95.9%** | **16** |
-| 0.99 | 60.0% | 99.3% | 2 |
+| 0.60 | 94.0% | 92.1% | 36 |
+| **0.90** | **79.1%** | **96.3%** | **14** |
+| 0.99 | 61.7% | 96.0% | 12 |
 
 Criterio: en ventanilla, mostrar una glosa equivocada engaña al funcionario,
 mientras que "no reconocida" solo pide repetir la seña. Espera que
 **aproximadamente 1 de cada 5 señas se rechace** — es el comportamiento
 diseñado, no un fallo.
+
+**No subas el umbral en C# buscando más precisión.** El modelo está mal
+calibrado: la p95 de la confianza de sus predicciones erróneas es 1.00, o sea que
+hay fallos con confianza máxima que ningún umbral filtra. Pasar de 0.90 a 0.99
+solo quita 2 de las 14 glosas erróneas y cuesta 17 puntos de cobertura.
 
 ---
 

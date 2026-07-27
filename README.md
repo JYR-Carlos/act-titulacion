@@ -318,16 +318,23 @@ python entrenar.py --cv
 
 **Resultados obtenidos (2026-07-26)** sobre 483 de 500 vídeos con detección:
 
-| Modo | k-fold estratificado | **k-fold por señante** |
-|---|---|---|
-| `dominante` (63 dim) | 0.985 ± 0.012 | **0.903 ± 0.054** |
-| `ambas` (126 dim) | 0.969 ± 0.022 | 0.911 ± 0.056 |
+| Modo | k-fold estratificado | **k-fold por señante** | JSON |
+|---|---|---|---|
+| `dominante` (63 dim) | 0.981 ± 0.017 | **0.911 ± 0.051** | `cv_metrics_dominante[_senante].json` |
+| `ambas` (126 dim) | 0.973 ± 0.020 | 0.905 ± 0.063 | `cv_metrics_ambas[_senante].json` |
 
 Ambos modos superan el objetivo MVP (≥ 0.85) en la evaluación por señante, que es
-la exigente. Los dos modos son indistinguibles entre sí (las diferencias caen
-dentro de las desviaciones y del ruido de corrida a corrida, ~±0.01, porque el
-entrenamiento de Keras no es bit-determinista aunque se fije la semilla), así que
-se elige `dominante` por coste: la mitad de entrada.
+la exigente. Los dos modos son indistinguibles entre sí: las diferencias caen
+dentro de las desviaciones y del ruido de corrida a corrida (~±0.01, porque el
+entrenamiento de Keras no es bit-determinista aunque se fije la semilla), y de
+hecho **el orden entre ellos se invierte según la corrida** — antes `ambas` iba
+por delante, ahora `dominante`. Se elige `dominante` por coste: la mitad de
+entrada.
+
+> Reporta siempre la media **con su desviación** y cita la corrida: con los
+> mismos splits, `dominante` por señante ha dado 0.903, 0.911, 0.915 y 0.920.
+> Cada corrida deja su propio JSON en `outputs/reports/`.
+> Recalcular: `python evaluar_modelo.py --fuente cv` (ver `METRICAS_MVP.md`).
 
 **La cifra de LSA64 es una cota inferior.** Los señantes de LSA64 graban con
 **guantes de colores** (rosa/verde, que el dataset usa para identificar manos) y

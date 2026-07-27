@@ -105,12 +105,17 @@ contra la forma declarada por el ONNX en vez de asumirla.
 reporta como `"<desconocida>"` — es el flujo alternativo FA-01 de CU-01, no un
 error.
 
-El umbral **ya no es provisional**: se calibró el 2026-07-26 sobre las
-predicciones out-of-fold de la validación por señante (483 muestras, LSA64).
-A 0.90 la cobertura es 81.4% con 95.9% de precisión; a 0.60 sería 96.3% y 92.7%.
-Se eligió 0.90 porque mostrar una glosa equivocada en ventanilla engaña al
-funcionario, mientras que "no reconocida" solo pide repetir la seña. El valor vive
-en `lsch_mr/config.py`; si cambia allí, cambia aquí.
+El umbral **ya no es provisional**: se calibró sobre las predicciones out-of-fold
+de la validación por señante (483 muestras, LSA64; corrida canónica del
+2026-07-26). A 0.90 la cobertura es 79.1% con 96.3% de precisión; a 0.60 sería
+94.0% y 92.1%. Se eligió 0.90 porque mostrar una glosa equivocada en ventanilla
+engaña al funcionario, mientras que "no reconocida" solo pide repetir la seña.
+El valor vive en `lsch_mr/config.py`; si cambia allí, cambia aquí.
+
+**No intentes mejorar la precisión subiendo el umbral en C#.** El modelo está mal
+calibrado: la p95 de la confianza de sus predicciones erróneas es 1.00, o sea que
+hay fallos con confianza máxima que ningún umbral filtra. Pasar de 0.90 a 0.99
+solo quita 2 de las 14 glosas erróneas y cuesta 17 puntos de cobertura.
 
 ## 4. C# de referencia
 
