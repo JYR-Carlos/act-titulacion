@@ -1,20 +1,54 @@
-# Modelo de MediaPipe (se descarga con descargar_modelo.py)
-models/*.task
-
-# Datos y artefactos generados
-data/raw/*.csv
-data/processed/*.npz
-# datasets de referencia descargados (SWL-LSE, LSA64, ...)
+# --------------------------------------------------------------------------- #
+# Datos: NO versionados
+# --------------------------------------------------------------------------- #
+# El corpus LSA64 se descarga de su fuente original (ver NOTICE.md) y los CSV de
+# keypoints se regeneran con extraer_lote.py. Pesan cientos de MB y su licencia
+# es CC BY-NC-SA 4.0: redistribuirlos aquí sería otra cosa que citarlos.
 data/external/
-outputs/models/*.keras
-outputs/models/*.onnx
-outputs/models/*.json
-outputs/reports/*
+data/raw/
 
-# Python
+# Modelo de MediaPipe: lo descarga descargar_modelo.py, no se redistribuye.
+*.task
+
+# --------------------------------------------------------------------------- #
+# Datasets procesados: se versionan SOLO los dos que respaldan las cifras
+# --------------------------------------------------------------------------- #
+# Sin ellos no se pueden reproducir las métricas del informe sin re-extraer el
+# corpus entero (~500 vídeos). Pesan 6.1 y 6.9 MB, muy por debajo del límite de
+# 50 MB de Git. Los .npz de experimentos sueltos siguen fuera.
+data/processed/*.npz
+!data/processed/lsa64_dominante.npz
+!data/processed/lsa64_ambas.npz
+
+# --------------------------------------------------------------------------- #
+# Artefactos: se versiona lo que hace el repo utilizable desde un clone
+# --------------------------------------------------------------------------- #
+# modelo.onnx + labels.json son el punto de acoplamiento con Unity
+# (INTEGRACION_UNITY.md) y lo que permite correr la demo sin reentrenar.
+# El .keras es un intermedio: se regenera con entrenar.py.
+outputs/models/*
+!outputs/models/modelo.onnx
+!outputs/models/labels.json
+
+# Los .json de reportes son la evidencia en disco de las cifras del informe:
+# sin ellos las métricas no son verificables. Las matrices .png y .csv se
+# regeneran desde esos mismos .json con `evaluar_modelo.py --fuente cv`, sin
+# reentrenar, así que no hace falta versionar binarios.
+outputs/reports/*
+!outputs/reports/*.json
+
+# Plantilla de etiquetado del ground truth de segmentación (se rellena a mano).
+etiquetado/
+
+# --------------------------------------------------------------------------- #
+# Entorno y caches
+# --------------------------------------------------------------------------- #
+.venv/
+venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
-.venv/
-venv/
 *.egg-info/
+
+# Volcado del repo generado por harness/assembler_repo.py (se regenera).
+codigo_repo.txt
