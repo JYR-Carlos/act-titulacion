@@ -57,10 +57,11 @@ concluir que hubo un error de reconocimiento.
 
 `CONF_THRESHOLD = 0.90` (`lsch_mr/config.py`) filtra lo que se muestra como
 reconocido. Pero el modelo está **mal calibrado**: la confianza mediana de sus
-predicciones *erróneas* es 0.85, y su percentil 95 llega a 0.99 (nota en
-`config.py`, calibrada el 2026-07-26). Es decir: **una confianza alta no es
-garantía de acierto.** Si la demo mostró una glosa con confianza 0.95+ y aun
-así no coincide con lo que señaste, no es contradictorio — es exactamente el
+predicciones *erróneas* es **0.78**, y su percentil 95 llega a **1.00** (corrida
+canónica del 2026-07-26, `outputs/reports/cv_metrics_dominante_senante.json`).
+Es decir: **una confianza alta no es garantía de acierto** — hay fallos con
+confianza máxima. Si la demo mostró una glosa con confianza 0.95+ y aun así no
+coincide con lo que señaste, no es contradictorio: es exactamente el
 comportamiento que esa calibración advierte. El vídeo de referencia sigue
 siendo la forma más confiable de confirmar.
 

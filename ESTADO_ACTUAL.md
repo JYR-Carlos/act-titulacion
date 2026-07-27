@@ -41,22 +41,22 @@ build_dataset → ModelTrainer (TCN, Keras 3) → ModelExporter (ONNX opset 13) 
 SignClassifier (onnxruntime, ~3.5 ms/inferencia) → MessageComposer
 ```
 
-- **124 tests pytest pasan** (`python -m pytest -q`), repartidos así:
+- **135 tests pytest pasan** (`python -m pytest -q`), repartidos así:
 
   | Área | Archivo | Tests |
   |---|---|---|
   | Estabilidad del preprocesador (cámara pinhole) | `test_preprocesador_estabilidad.py` | 22 |
+  | `cargar_grupos` + guardas de `--cv-grupos` | `test_cargar_grupos.py` | 16 |
   | Métricas de segmentación | `test_metricas_segmentacion.py` | 15 |
   | Métricas de clasificación | `test_metricas_clasificacion.py` | 14 |
   | Métricas de TSR | `test_metricas_tsr.py` | 12 |
   | Reporte de sesión de `demo_vivo` | `test_demo_vivo_metricas.py` | 10 |
+  | `KeypointNormalizer` | `test_keypoint_normalizer.py` | 9 |
   | `RestStateDetector` | `test_rest_state_detector.py` | 8 |
   | Realce de poca luz | `test_realce_luz.py` | 8 |
   | `MonitorRecursos` | `test_monitor_recursos.py` | 8 |
-  | `KeypointNormalizer` | `test_keypoint_normalizer.py` | 8 |
   | `MessageComposer` | `test_message_composer.py` | 7 |
   | Split 80/20 del modelo final | `test_split_indices.py` | 6 |
-  | `cargar_grupos` | `test_cargar_grupos.py` | 5 |
 
 - `python generar_vectores_dorados.py --verificar` comprueba que el
   preprocesamiento no cambió respecto a los vectores de referencia del port a C#.
