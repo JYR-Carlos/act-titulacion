@@ -25,6 +25,19 @@ _DESCONOCIDA = "<desconocida>"
 
 
 class SignClassifier:
+    """Clasifica una SignSequence con el ONNX exportado (Sección 10.2).
+
+    Es el equivalente Python de lo que hará Sentis en Unity, y por eso su
+    comportamiento es parte del contrato de `INTEGRACION_UNITY.md`:
+
+      * la entrada se remuestrea a `seq_len` y se ensambla según `modo_manos`,
+        ambos leídos de `labels.json` y no de constantes;
+      * el grafo **ya termina en Softmax**, así que aquí no se vuelve a aplicar;
+      * por debajo de `conf_threshold` la seña se reporta como
+        `"<desconocida>"`, que es el flujo alternativo FA-01 de CU-01 y no un
+        error.
+    """
+
     def __init__(self,
                  onnx_path: Path = config.OUTPUTS_MODELS_DIR / "modelo.onnx",
                  labels_path: Path = config.OUTPUTS_MODELS_DIR / "labels.json",

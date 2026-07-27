@@ -17,6 +17,17 @@ import sys
 
 
 def configurar_utf8() -> None:
+    """Pone stdout/stderr en UTF-8 y activa el coloreado ANSI.
+
+    Llamar al arrancar **cualquier** script de este repo. La consola de Windows
+    va en cp1252 y basta con imprimir una `ñ`, una comilla tipográfica o un
+    signo matemático para que el proceso muera con `UnicodeEncodeError` a mitad
+    de una corrida larga. `errors="replace"` garantiza que, si aún así aparece
+    un carácter imposible, se degrade a un símbolo en vez de tumbar el proceso.
+
+    Es idempotente y no falla nunca: si el stream no admite `reconfigure`
+    (redirigido, capturado por pytest), se ignora en silencio.
+    """
     for stream in (sys.stdout, sys.stderr):
         try:
             stream.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
@@ -69,16 +80,20 @@ def _envolver(texto: str, codigo: str) -> str:
 
 
 def rojo(texto: str) -> str:
+    """Rojo: una métrica que NO alcanza su umbral. Sin color si no hay TTY."""
     return _envolver(texto, "1;31")
 
 
 def verde(texto: str) -> str:
+    """Verde: una métrica que cumple su umbral. Sin color si no hay TTY."""
     return _envolver(texto, "1;32")
 
 
 def amarillo(texto: str) -> str:
+    """Amarillo: un aviso o un resultado que no es concluyente."""
     return _envolver(texto, "1;33")
 
 
 def negrita(texto: str) -> str:
+    """Negrita sin color, para titulares dentro de un bloque de texto."""
     return _envolver(texto, "1")

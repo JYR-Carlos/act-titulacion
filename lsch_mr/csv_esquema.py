@@ -31,6 +31,15 @@ COLUMNAS = ["sample_id", "frame_idx", "hand", "handedness_score"] + _X + _Y + _Z
 
 def fila_desde_mano(sample_id, frame_idx: int, landmarks: np.ndarray,
                     hand: str, score: float, label: str) -> dict:
+    """Una fila del CSV crudo: los 21 keypoints de UNA mano en UN frame.
+
+    Los keypoints se guardan **sin normalizar**, tal como salen del
+    `HandLandmarker`. La normalización es un paso posterior (`build_dataset`),
+    para poder rehacerla sin volver a extraer el corpus, que es lo caro.
+
+    Un frame con dos manos produce dos filas con el mismo `sample_id` y
+    `frame_idx`, distinguidas por la columna `hand`.
+    """
     pts = np.asarray(landmarks, dtype=np.float32).reshape(config.NUM_LANDMARKS,
                                                           config.NUM_EJES)
     fila = {"sample_id": sample_id, "frame_idx": frame_idx,
@@ -55,6 +64,12 @@ class EscritorCSV:
 
     def escribir_multiframe(self, sample_id, frame_idx: int,
                             multi: MultiHandFrame, label: str) -> int:
+        """Escribe una fila por mano detectada. Devuelve cuántas escribió.
+
+        Cero manos escribe cero filas: los huecos del corpus son huecos en
+        `frame_idx`, no filas de ceros. Por eso el contador de retorno importa
+        —es lo que permite detectar un vídeo sin ninguna detección.
+        """
         n = 0
         for h in multi.hands:
             self._w.writerow(fila_desde_mano(sample_id, frame_idx,
@@ -63,10 +78,12 @@ class EscritorCSV:
         return n
 
     def escribir_filas(self, filas: Iterable[dict]) -> None:
+        """Escribe filas ya construidas (deben tener las claves de `COLUMNAS`)."""
         for fila in filas:
             self._w.writerow(fila)
 
     def cerrar(self) -> None:
+        """Cierra el archivo. Preferir el uso como context manager."""
         self._f.close()
 
     def __enter__(self) -> "EscritorCSV":

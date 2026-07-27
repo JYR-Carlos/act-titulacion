@@ -147,9 +147,11 @@ class HandTrackingProvider:
 
     @property
     def ultimo(self) -> MultiHandFrame:
+        """Última detección, sin volver a inferir. Para el overlay de la demo."""
         return self._ultimo
 
     def cerrar(self) -> None:
+        """Libera el HandLandmarker. Idempotente y no lanza."""
         try:
             self._landmarker.close()
         except Exception:

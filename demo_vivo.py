@@ -360,10 +360,22 @@ def main() -> int:
         if x1 <= x <= x2 and y1 <= y <= y2:
             estado_ui["mostrar_puntos"] = not estado_ui["mostrar_puntos"]
 
+    # Se abre la cámara ANTES de la ventana: si falla, el usuario ve un mensaje
+    # accionable y no un traceback con una ventana negra encima. `abrir()` es
+    # idempotente, así que el `with` de abajo no la reabre.
+    fuente = FuenteVideo(parse_fuente(args.fuente), espejo=False)
+    try:
+        fuente.abrir()
+    except RuntimeError as e:
+        raise SystemExit(
+            f"\n[demo_vivo] {e}\n"
+            "  Si es una webcam local, prueba otro índice: --fuente 0, 1, 2...\n"
+            "  Para ver qué está viendo la cámara: python diagnostico_captura.py")
+
     cv2.namedWindow(NOMBRE_VENTANA)
     cv2.setMouseCallback(NOMBRE_VENTANA, _click_boton)
 
-    with FuenteVideo(parse_fuente(args.fuente), espejo=False).abrir() as fv, \
+    with fuente as fv, \
             HandTrackingProvider(num_hands=2, running_mode="image") as provider:
         try:
             for frame_bgr, ts_ms in fv.frames():

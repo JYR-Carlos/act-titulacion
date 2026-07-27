@@ -27,7 +27,23 @@ def main() -> int:
     args = ap.parse_args()
 
     exporter = ModelExporter(opset=args.opset)
-    res = exporter.export(Path(args.keras), Path(args.onnx))
+    try:
+        res = exporter.export(Path(args.keras), Path(args.onnx))
+    except FileNotFoundError as e:
+        # Falta el .keras: es lo normal en un clone limpio, no un bug. El repo
+        # trae el .onnx ya exportado, así que la mayoría no necesita este paso.
+        raise SystemExit(
+            f"\n[exportar_onnx] {e}\n"
+            "  El repo ya incluye outputs/models/modelo.onnx: solo hace falta "
+            "reexportar si reentrenaste.")
+    except Exception as e:
+        # tf2onnx + Keras 3 es la combinación frágil del entorno; si falla, lo
+        # que hay que mirar son las versiones, no el código.
+        raise SystemExit(
+            f"\n[exportar_onnx] Falló la exportación: {type(e).__name__}: {e}\n"
+            "  Comprueba que tensorflow y tf2onnx son las versiones pineadas "
+            "en requirements.txt: la exportación es lo primero que rompe una "
+            "versión más nueva de TensorFlow.")
 
     print("\n===== EXPORTACIÓN ONNX =====")
     print(f"  archivo        : {res.path}")

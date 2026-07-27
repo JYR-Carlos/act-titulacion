@@ -15,6 +15,18 @@ from typing import Callable, Optional
 
 
 class MessageComposer:
+    """Acumula glosas reconocidas en un mensaje (CU-03, Sección 10.2).
+
+    Tres formas de cerrar el mensaje, todas del diseño:
+      * llegar a `max_words` glosas;
+      * que venzan `continuity_timeout` segundos sin una glosa nueva — lo
+        comprueban tanto `appendWord()` como `tick()`;
+      * `reiniciar()`, el gesto de reinicio manual (FA-01 de CU-03).
+
+    El reloj se inyecta (`reloj`) para poder testear el timeout sin esperar en
+    tiempo real.
+    """
+
     def __init__(self, max_words: int = 8, continuity_timeout: float = 4.0,
                  reloj: Callable[[], float] = time.monotonic) -> None:
         self.max_words = max_words
@@ -26,6 +38,13 @@ class MessageComposer:
 
     # -- Contrato del diseño ------------------------------------------------ #
     def appendWord(self, label: str) -> None:
+        """Añade una glosa al mensaje en curso.
+
+        Antes de añadirla comprueba el timeout de continuidad: si pasó
+        demasiado tiempo desde la anterior, el mensaje viejo se despliega y
+        esta glosa abre uno nuevo, en vez de pegarse a una frase que el usuario
+        ya dio por terminada.
+        """
         ahora = self._reloj()
         # Timeout de continuidad: vencido -> se despliega y se reinicia.
         if (self._ultimo_ts is not None and
@@ -57,6 +76,7 @@ class MessageComposer:
         return True
 
     def texto(self) -> str:
+        """El mensaje acumulado hasta ahora, para dibujar como subtítulo."""
         return " ".join(self._buffer)
 
     def reiniciar(self) -> None:

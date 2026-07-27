@@ -22,6 +22,19 @@ from typing import Callable, Optional
 
 
 class MonitorRecursos:
+    """Muestrea CPU y memoria del proceso durante una sesión de demo.
+
+    El diseño no fija un umbral de aprobación para uso de recursos —solo para
+    accuracy, latencia, FPS y task success rate—, así que esto **no emite
+    veredicto**: deja el dato medido y estructurado para cuando haya que
+    presentarlo.
+
+    El lector y el reloj se inyectan para poder testear el muestreo por
+    intervalo sin depender de psutil ni esperar en tiempo real. El CPU se
+    normaliza por número de núcleos, que es lo que hace comparables dos
+    máquinas distintas.
+    """
+
     def __init__(self,
                  lector: Callable[[], tuple[float, float]],
                  n_cpus: int = 1,
@@ -74,6 +87,11 @@ class MonitorRecursos:
 
     @property
     def muestras(self) -> list[dict]:
+        """Copia de la serie completa. Para el overlay usar `ultima_muestra`.
+
+        La lista crece durante toda la sesión, así que copiarla una vez por
+        frame sería caro sin ninguna razón.
+        """
         return list(self._muestras)
 
     @property

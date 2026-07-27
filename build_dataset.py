@@ -113,16 +113,37 @@ def main() -> int:
     else:
         csvs = sorted(config.DATA_RAW_DIR.glob("*.csv"))
     if not csvs:
-        print("No hay CSV de entrada. Graba corpus o extrae keypoints primero.")
+        print(f"No hay CSV de entrada en {config.DATA_RAW_DIR}.\n"
+              "  Extrae keypoints de un corpus de vídeos:\n"
+              "    python extraer_lote.py --videos-dir <dir> "
+              "--anotaciones lsa64_10_annotations.csv --salida data/raw/lsa64_10.csv\n"
+              "  o graba corpus propio con:  python grabar_corpus.py --senante s01")
+        return 1
+
+    # Se comprueban todos antes de leer ninguno: mejor listar los que faltan de
+    # una vez que morir en el primero tras haber procesado los anteriores.
+    faltan = [str(c) for c in csvs if not c.exists()]
+    if faltan:
+        print("No existe(n) el/los CSV de entrada:\n" +
+              "".join(f"    {f}\n" for f in faltan) +
+              "  Revisa la ruta, o genéralo con extraer_lote.py / grabar_corpus.py.")
         return 1
 
     # 1) Reconstruir todas las muestras.
     todas = {}
     for c in csvs:
-        for (key, label), frames in _leer_csv(c).items():
-            todas[key] = (label, frames)   # key = (archivo, label, sample_id)
+        try:
+            for (key, label), frames in _leer_csv(c).items():
+                todas[key] = (label, frames)   # key = (archivo, label, sample_id)
+        except (OSError, UnicodeDecodeError, _csv.Error) as e:
+            print(f"No se pudo leer {c}: {e}\n"
+                  "  ¿Es un CSV del esquema de este repo (lsch_mr/csv_esquema.py)?")
+            return 1
     if not todas:
-        print("No se encontraron muestras etiquetadas en los CSV.")
+        print("Los CSV no tienen ninguna muestra etiquetada.\n"
+              f"  Se leyeron {len(csvs)} archivo(s) pero ninguna fila con "
+              "sample_id y label utilizables.\n"
+              "  Comprueba que las columnas son las de lsch_mr/csv_esquema.py.")
         return 1
 
     labels_presentes = {lab for lab, _ in todas.values()}

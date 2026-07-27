@@ -47,6 +47,27 @@ _EPS = 1e-6
 
 
 class RestStateDetector:
+    """Segmenta la seña midiendo movimiento entre frames (Sección 8).
+
+    Máquina de dos estados —`reposo` y `capturando`— que decide sola dónde
+    empieza y dónde termina una seña, sin que el usuario pulse nada:
+
+      * `frames_inicio` frames de movimiento sostenido abren la captura;
+      * `frames_fin` frames de reposo sostenido la cierran y emiten la
+        secuencia;
+      * una secuencia de menos de `min_frames` se descarta como ruido;
+      * perder la mano más de `frames_perdida_max` frames descarta la captura
+        en curso.
+
+    El movimiento se mide **escalado por el tamaño de la mano** (‖L9−L0‖), así
+    que el umbral no depende de a qué distancia esté el señante de la cámara.
+
+    `frames_fin` es el precio en latencia del diseño: el detector no puede
+    saber que la seña terminó hasta ver esos frames de reposo, así que ese
+    retardo entra en la latencia end-to-end y no se puede descontar de una
+    medición honesta.
+    """
+
     def __init__(self,
                  umbral_movimiento: float = config.REST_UMBRAL_MOVIMIENTO,
                  frames_inicio: int = config.REST_FRAMES_INICIO,
@@ -61,6 +82,11 @@ class RestStateDetector:
         self.reset()
 
     def reset(self) -> None:
+        """Vuelve a reposo y descarta la secuencia en curso, si la había.
+
+        Se llama al construir el detector y cada vez que hay que abandonar una
+        captura (pérdida de tracking, cambio de fuente de vídeo).
+        """
         self.state = "reposo"
         self._buffer: list[Any] = []
         self._prev: Optional[np.ndarray] = None
@@ -175,8 +201,14 @@ class RestStateDetector:
     # -- Introspección para overlay ---------------------------------------- #
     @property
     def capturando(self) -> bool:
+        """¿Hay una seña en curso? Lo usa el overlay de la demo."""
         return self.state == "capturando"
 
     @property
     def n_frames_buffer(self) -> int:
+        """Frames acumulados de la seña en curso.
+
+        Puede pasar de 60: el detector no corta la captura, la longitud fija la
+        impone el remuestreo posterior (INTEGRACION_UNITY.md §3C).
+        """
         return len(self._buffer)

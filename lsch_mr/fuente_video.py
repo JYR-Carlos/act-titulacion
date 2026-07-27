@@ -43,6 +43,19 @@ class FuenteVideo:
         self._t0: Optional[float] = None
 
     def abrir(self) -> "FuenteVideo":
+        """Abre la fuente. Lanza `RuntimeError` con la causa probable si falla.
+
+        Es el fallo más común al montar el repo en otra máquina —cámara
+        ocupada, índice equivocado, teléfono que no está transmitiendo— así que
+        el mensaje dice qué comprobar en vez de dejar un `None` que reviente
+        más adelante.
+
+        Idempotente: reabrir una fuente ya abierta la devuelve tal cual. Así se
+        puede validar la apertura antes de un `with` sin que `__enter__` cree
+        una segunda `VideoCapture` y deje la primera colgando.
+        """
+        if self._cap is not None and self._cap.isOpened():
+            return self
         # CAP_FFMPEG es más robusto para URLs de red (streams del teléfono).
         if isinstance(self.fuente, str) and "://" in self.fuente:
             self._cap = cv2.VideoCapture(self.fuente, cv2.CAP_FFMPEG)
@@ -79,6 +92,11 @@ class FuenteVideo:
             yield r
 
     def cerrar(self) -> None:
+        """Libera la cámara. Idempotente; preferir el uso como context manager.
+
+        Sin esto la webcam queda tomada por el proceso y el siguiente script
+        falla al abrirla.
+        """
         if self._cap is not None:
             self._cap.release()
             self._cap = None

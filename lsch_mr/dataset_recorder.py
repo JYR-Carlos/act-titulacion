@@ -31,6 +31,18 @@ from .tipos import SignEventType
 
 
 class DatasetRecorder:
+    """Graba corpus propio en tomas continuas, segmentado automáticamente.
+
+    El señante elige la glosa con las teclas `0..9`, hace la seña y vuelve a
+    reposo: el `RestStateDetector` cierra la muestra y la escribe sola.
+
+    **El identificador del señante va dentro del `sample_id`** (`s01_0001`).
+    Es lo único que después permite la validación cruzada dejando señantes
+    fuera —la cifra reportable del proyecto— y **no se puede reconstruir a
+    posteriori**: si se graba sin él, esa evaluación queda imposible para
+    siempre sobre ese corpus.
+    """
+
     def __init__(self, glosas: list[str],
                  fuente: FuenteSpec = 0,
                  espejo: bool = True,

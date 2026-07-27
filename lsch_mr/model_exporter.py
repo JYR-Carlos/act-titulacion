@@ -31,6 +31,12 @@ OPS_SENTIS_SOPORTADOS = {
 
 @dataclass
 class OnnxModel:
+    """Resultado de exportar: la ruta y el veredicto de compatibilidad.
+
+    `sentisCompatible` es False si `no_soportados` trae algún operador que
+    Unity Sentis no implementa. Vale la pena saberlo aquí y no en el otro repo:
+    allí el síntoma sería que el modelo no carga, sin decir por qué.
+    """
     path: str
     opset: int
     sentisCompatible: bool
@@ -39,6 +45,14 @@ class OnnxModel:
 
 
 class ModelExporter:
+    """Convierte el modelo Keras a ONNX y valida que Sentis pueda cargarlo.
+
+    Usa un opset conservador (13) porque Sentis va por detrás de onnxruntime en
+    cobertura de operadores. La combinación tf2onnx + Keras 3 es frágil, así
+    que `export()` intenta varias rutas antes de rendirse: ver los fallbacks
+    dentro del método.
+    """
+
     def __init__(self, opset: int = config.ONNX_OPSET) -> None:
         self.opset = opset
 
@@ -46,6 +60,15 @@ class ModelExporter:
     def export(self, keras_path: Path = config.OUTPUTS_MODELS_DIR / "tcn_lsch.keras",
                onnx_path: Path = config.OUTPUTS_MODELS_DIR / "modelo.onnx"
                ) -> OnnxModel:
+        """Exporta el `.keras` a ONNX y devuelve el veredicto de operadores.
+
+        Lanza `FileNotFoundError` si no hay modelo entrenado todavía.
+
+        Al reexportar, el `.onnx` cambia de sha1 y eso **invalida el octavo
+        caso de `integracion/vectores_dorados.json`**, que compara Sentis
+        contra onnxruntime. Hay que regenerar los dorados y avisar al equipo de
+        Unity (INTEGRACION_UNITY.md §5).
+        """
         import tensorflow as tf
 
         keras_path = Path(keras_path)

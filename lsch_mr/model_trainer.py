@@ -53,10 +53,22 @@ class CVMetrics:
     corrida: dict = field(default_factory=dict)
 
     def resumen(self) -> str:
+        """Línea reportable: media ± desviación, con el esquema que la produjo.
+
+        Siempre con la desviación y siempre con el esquema: un valor puntual no
+        es reportable —hay ~±0.01 de ruido entre corridas— y "0.98" significa
+        cosas muy distintas según sea estratificado o por señante.
+        """
         return (f"{self.mean_accuracy:.3f} ± {self.std_accuracy:.3f} "
                 f"({self.n_splits}-fold {self.esquema})")
 
     def to_dict(self) -> dict:
+        """Serializa la evaluación completa para `cv_metrics_*.json`.
+
+        El JSON se basta solo: lleva las clases, los metadatos de la corrida y
+        las predicciones out-of-fold con su confianza, así que se puede
+        recalcular el umbral o rehacer la matriz de confusión sin reentrenar.
+        """
         return {"n_splits": self.n_splits,
                 "esquema": self.esquema,
                 "n_grupos": self.n_grupos,
@@ -80,6 +92,12 @@ class CVMetrics:
 
 @dataclass
 class Metrics:
+    """Resultado de `train()`: el modelo exportable y su desempeño.
+
+    `val_accuracy` sale del split 80/20 aleatorio y **no es la cifra
+    reportable**: reparte repeticiones del mismo señante a ambos lados. La
+    cifra del informe está en `cv`, si se pasó una evaluación cruzada.
+    """
     val_accuracy: float
     train_accuracy: float
     classes: list[str]
@@ -93,6 +111,20 @@ class Metrics:
 
 
 class ModelTrainer:
+    """Entrena el TCN y estima su desempeño (CU-02).
+
+    Dos entradas con propósitos distintos, y conviene no confundirlas:
+
+      * `train()` produce el **modelo que se exporta** a ONNX, sobre un split
+        80/20. Su `val_accuracy` no es reportable.
+      * `evaluar_cv()` produce la **cifra reportable**, y no guarda ningún
+        modelo: entrena uno por fold y los descarta.
+
+    Ambas usan exactamente la misma arquitectura y receta (`_nuevo_modelo`,
+    `_callbacks`); si divergieran, la estimación k-fold dejaría de describir al
+    modelo que efectivamente se exporta.
+    """
+
     def __init__(self,
                  epochs: int = config.ENTRENAMIENTO_EPOCHS,
                  batch_size: int = config.ENTRENAMIENTO_BATCH,

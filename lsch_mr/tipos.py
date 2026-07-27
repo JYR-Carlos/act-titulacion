@@ -46,6 +46,7 @@ class MultiHandFrame:
 
     @property
     def visible(self) -> bool:
+        """¿Se detectó alguna mano en este frame?"""
         return len(self.hands) > 0
 
     def dominante(self) -> Optional[HandFrame]:
@@ -55,6 +56,12 @@ class MultiHandFrame:
         return max(self.hands, key=lambda h: h.score)
 
     def por_lado(self, lado: str) -> Optional[HandFrame]:
+        """Mano `"Left"` o `"Right"` según la handedness que reporta el tracker.
+
+        Es la handedness detectada, no "la primera detectada": el modo `ambas`
+        ensambla `[Left | Right]` en ese orden y depende de esta distinción.
+        Si hay varias candidatas del mismo lado, devuelve la de mayor score.
+        """
         cand = [h for h in self.hands if h.hand == lado]
         return max(cand, key=lambda h: h.score) if cand else None
 
