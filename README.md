@@ -499,6 +499,7 @@ al equipo de Unity.
 | `evaluar_segmentacion.py` | Prueba previa: límites de seña del `RestStateDetector`. |
 | `calcular_tsr.py` | Métrica 4: task success rate con intervalo de Wilson. |
 | `reproducir_metricas.py` | Las cuatro evaluaciones del informe de una vez. |
+| `verificar_artefactos.py` | Comprueba que `modelo.onnx`, `labels.json` y los vectores dorados siguen alineados entre sí. Corre en CI. |
 | `generar_vectores_dorados.py` | Casos dorados de la Capa 2 para el port a C#. |
 | `generar_secuencia_dorada.py` | Casos dorados de la Capa 1 + 2 sobre una seña real. |
 

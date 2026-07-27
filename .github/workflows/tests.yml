@@ -1,0 +1,59 @@
+name: tests
+
+# El repo tiene que seguir instalándose y pasando las pruebas desde un clone
+# limpio, que es justo lo que no se puede comprobar en la máquina donde se
+# desarrolla: allí las dependencias ya están y el corpus también.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # La versión sale de .python-version, el mismo archivo que usa pyenv-win
+      # en local: una sola fuente de verdad para el intérprete.
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      # opencv-python enlaza contra libGL y libglib, que la imagen de los
+      # runners no trae. Sin esto, `import cv2` falla y con él la mitad de las
+      # pruebas. Los nombres de paquete cambiaron en Ubuntu 24.04, de ahí el
+      # fallback.
+      - name: Librerías de sistema para opencv-python
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1 || sudo apt-get install -y libgl1-mesa-glx
+          sudo apt-get install -y libglib2.0-0t64 || sudo apt-get install -y libglib2.0-0
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Comprobar que las dependencias nativas cargan
+        run: |
+          python -c "import cv2, onnxruntime, mediapipe; print('cv2', cv2.__version__); print('onnxruntime', onnxruntime.__version__); print('mediapipe', mediapipe.__version__)"
+
+      - name: Pruebas
+        run: python -m pytest -q -m "not camera"
+
+      # El modelo va versionado y es el punto de acoplamiento con Unity. Si un
+      # commit lo deja inconsistente con labels.json, el fallo aparecería en el
+      # otro repo —cargando bien y prediciendo basura— en vez de aquí.
+      - name: Verificar el artefacto que consume Unity
+        run: python verificar_artefactos.py
