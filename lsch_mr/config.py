@@ -91,24 +91,30 @@ REST_FRAMES_PERDIDA_MAX = 3
 # --------------------------------------------------------------------------- #
 # Bajo este umbral la seña se reporta como "fuera de vocabulario" (FA-01).
 #
-# Calibrado el 2026-07-26 sobre las predicciones out-of-fold de la validación
-# por señante (483 muestras, LSA64). El compromiso medido fue:
+# Calibrado sobre las predicciones out-of-fold de la validación por señante
+# (483 muestras, LSA64). Cifras de la corrida canónica del 2026-07-26,
+# `outputs/reports/cv_metrics_dominante_senante.json` (0.911 ± 0.051):
 #
 #   umbral   cobertura   precisión   glosas erróneas mostradas
-#     0.60      96.3%       92.7%       34
-#     0.90      81.4%       95.9%       16     <- elegido
-#     0.95      75.4%       97.3%       10
-#     0.99      60.0%       99.3%        2
+#     0.60      94.0%       92.1%       36
+#     0.90      79.1%       96.3%       14     <- elegido
+#     0.95      73.3%       96.0%       14
+#     0.99      61.7%       96.0%       12
 #
 # Se elige 0.90 porque en ventanilla mostrar una glosa equivocada engaña al
-# funcionario, mientras que "no reconocida" solo pide repetir la seña; 0.99 daría
-# casi cero errores pero descarta 4 de cada 10 reconocimientos correctos y el
-# sistema parecería roto.
+# funcionario, mientras que "no reconocida" solo pide repetir la seña. Y porque
+# es la rodilla de la curva: de 0.90 en adelante la precisión deja de subir
+# (96.3% -> 96.0%) mientras la cobertura sigue cayendo.
 #
-# OJO: el modelo está mal calibrado — la confianza mediana de sus predicciones
-# ERRÓNEAS es 0.85 y su p95 llega a 0.99. Por eso el umbral es un instrumento
-# romo: subirlo cuesta mucha cobertura y quita pocos errores. Corregirlo de raíz
-# (temperature scaling u otra calibración) queda como trabajo futuro.
+# OJO: el modelo está MAL CALIBRADO, y peor de lo que parecía. La confianza
+# mediana de sus predicciones ERRÓNEAS es 0.78 y su p95 llega a 1.00: hay fallos
+# con confianza máxima. Por eso el umbral es un instrumento romo — pasar de 0.90
+# a 0.99 solo quita 2 de las 14 glosas erróneas y cuesta 17 puntos de cobertura.
+# No se puede comprar precisión subiendo el umbral. Corregirlo de raíz
+# (temperature scaling u otra calibración) queda como trabajo futuro, y cambiaría
+# el contrato con Unity porque hoy el softmax va dentro del grafo ONNX.
+#
+# Recalcular tras reentrenar:  python evaluar_modelo.py --fuente cv
 CONF_THRESHOLD = 0.90
 
 # --------------------------------------------------------------------------- #
