@@ -1,0 +1,17 @@
+{
+  "classes": [
+    "Accept",
+    "Appear",
+    "Call",
+    "Give",
+    "Help",
+    "Last_name",
+    "Name",
+    "None",
+    "Patience",
+    "Thanks"
+  ],
+  "modo_manos": "dominante",
+  "seq_len": 60,
+  "n_features": 63
+}
