@@ -1,0 +1,243 @@
+{
+  "metrica": "1 - precisión algorítmica (accuracy)",
+  "fuente": "modelo",
+  "artefacto": "C:\\Proyecto\\actividad-titulacion\\outputs\\models\\modelo.onnx",
+  "protocolo": "conjunto de test retenido: 97 de 483 muestras (20%), split estratificado aleatorio semilla=42",
+  "esquema": "split 80/20 estratificado aleatorio",
+  "advertencia_esquema": "El split es aleatorio: repeticiones de un mismo señante caen en entrenamiento y en test a la vez, así que esta cifra sobreestima la generalización a una persona nueva. Para el informe usa --fuente cv con cv_metrics_senante.json.",
+  "n_muestras": 97,
+  "classes": [
+    "Accept",
+    "Appear",
+    "Call",
+    "Give",
+    "Help",
+    "Last_name",
+    "Name",
+    "None",
+    "Patience",
+    "Thanks"
+  ],
+  "veredicto": {
+    "accuracy": 0.9897,
+    "objetivo": 0.85,
+    "cumple": true,
+    "brecha": -0.1397
+  },
+  "por_clase": [
+    {
+      "clase": "Accept",
+      "soporte": 10,
+      "aciertos": 10,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "f1": 1.0
+    },
+    {
+      "clase": "Appear",
+      "soporte": 10,
+      "aciertos": 9,
+      "accuracy": 0.9,
+      "precision": 1.0,
+      "f1": 0.9474
+    },
+    {
+      "clase": "Call",
+      "soporte": 10,
+      "aciertos": 10,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "f1": 1.0
+    },
+    {
+      "clase": "Give",
+      "soporte": 10,
+      "aciertos": 10,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "f1": 1.0
+    },
+    {
+      "clase": "Help",
+      "soporte": 10,
+      "aciertos": 10,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "f1": 1.0
+    },
+    {
+      "clase": "Last_name",
+      "soporte": 10,
+      "aciertos": 10,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "f1": 1.0
+    },
+    {
+      "clase": "Name",
+      "soporte": 10,
+      "aciertos": 10,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "f1": 1.0
+    },
+    {
+      "clase": "None",
+      "soporte": 10,
+      "aciertos": 10,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "f1": 1.0
+    },
+    {
+      "clase": "Patience",
+      "soporte": 7,
+      "aciertos": 7,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "f1": 1.0
+    },
+    {
+      "clase": "Thanks",
+      "soporte": 10,
+      "aciertos": 10,
+      "accuracy": 1.0,
+      "precision": 0.9091,
+      "f1": 0.9524
+    }
+  ],
+  "confusion_matrix": [
+    [
+      10,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      9,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      10,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      10,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      10,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      10,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      10,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      10,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      7,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      10
+    ]
+  ],
+  "cobertura_umbral": {
+    "umbral": 0.9,
+    "n": 97,
+    "n_mostradas": 90,
+    "cobertura": 0.9278,
+    "precision_mostradas": 0.9889,
+    "n_erroneas_mostradas": 1,
+    "n_ocultas_por_umbral": 7
+  },
+  "fold_accuracies": [],
+  "mean_accuracy_folds": null,
+  "std_accuracy_folds": null
+}

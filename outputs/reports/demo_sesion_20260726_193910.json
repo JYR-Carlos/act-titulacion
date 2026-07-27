@@ -1,0 +1,70 @@
+{
+  "sesion": {
+    "inicio": "2026-07-26T19:36:11",
+    "duracion_s": 179.3,
+    "fuente": "0",
+    "conf_threshold": 0.9,
+    "modo_manos": "dominante"
+  },
+  "recursos": {
+    "n_muestras": 170,
+    "duracion_s": 179.28,
+    "n_cpus_logicos": 12,
+    "cpu_pct_normalizado": {
+      "media": 7.3,
+      "min": 2.9,
+      "max": 42.1
+    },
+    "memoria_rss_mb": {
+      "media": 542.4,
+      "min": 520.0,
+      "max": 545.8
+    }
+  },
+  "captura": {
+    "fps_promedio_camara": 31.5
+  },
+  "latencia_e2e_ms": {
+    "umbral_ms": 500.0,
+    "n": 2,
+    "media_ms": 413.47,
+    "min_ms": 396.55,
+    "max_ms": 430.38,
+    "p95_ms": 428.69,
+    "n_excede_umbral": 0,
+    "pct_excede_umbral": 0.0
+  },
+  "reconocimiento": {
+    "n_clasificadas": 2,
+    "n_en_vocabulario": 1,
+    "n_fuera_vocabulario": 1,
+    "n_descartadas_tracking": 1,
+    "conteo_por_glosa": {
+      "Aparecer": 1
+    }
+  },
+  "historial_senas": [
+    {
+      "t_s": 138.59,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.6667,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 34.38,
+      "retardo_segmentacion_ms": 355.66,
+      "latencia_e2e_ms": 430.38,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 141.97,
+      "label": "Appear",
+      "label_es": "Aparecer",
+      "conf": 0.9979,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.54,
+      "retardo_segmentacion_ms": 333.1,
+      "latencia_e2e_ms": 396.55,
+      "excede_umbral": false
+    }
+  ]
+}

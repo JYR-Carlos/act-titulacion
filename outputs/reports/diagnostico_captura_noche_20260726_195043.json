@@ -1,0 +1,95 @@
+{
+  "etiqueta": "noche",
+  "inicio": "2026-07-26T19:50:43",
+  "fuente": "0",
+  "config_medida": {
+    "num_hands": 2,
+    "running_mode": "image",
+    "min_hand_detection_confidence": 0.5,
+    "rest_frames_inicio": 3,
+    "rest_frames_fin": 6,
+    "rest_frames_perdida_max": 3
+  },
+  "camara": {
+    "ancho": 640.0,
+    "alto": 480.0,
+    "fps_declarado": 30.0,
+    "exposicion": -5.0,
+    "ganancia": 64.0,
+    "brillo": 0.0,
+    "auto_exposicion": 0.0,
+    "backend": "MSMF"
+  },
+  "n_frames": 497,
+  "luminancia": {
+    "media": 9.65,
+    "min": 7.78,
+    "max": 11.0,
+    "p95": 10.67
+  },
+  "pct_pixeles_oscuros": {
+    "media": 95.98,
+    "min": 94.52,
+    "max": 98.01,
+    "p95": 97.61
+  },
+  "nitidez_frame": {
+    "media": 14.98,
+    "min": 6.68,
+    "max": 25.99,
+    "p95": 21.47
+  },
+  "nitidez_roi_mano": {
+    "media": 175.83,
+    "min": 40.0,
+    "max": 472.12,
+    "p95": 336.93
+  },
+  "score_handedness": {
+    "media": 0.97,
+    "min": 0.58,
+    "max": 1.0,
+    "p95": 1.0
+  },
+  "deteccion": {
+    "n_con_mano": 255,
+    "tasa_con_mano": 0.513,
+    "n_dos_manos": 107,
+    "racha_max_sin_mano": 38
+  },
+  "throughput": {
+    "t_lectura_ms": {
+      "media": 4.7,
+      "min": 0.74,
+      "max": 605.64,
+      "p95": 11.23
+    },
+    "t_mediapipe_ms": {
+      "media": 21.3,
+      "min": 9.86,
+      "max": 45.88,
+      "p95": 34.2
+    },
+    "t_loop_ms": {
+      "media": 40.27,
+      "min": 17.87,
+      "max": 671.38,
+      "p95": 51.27
+    },
+    "fps_efectivo_con_mano": 23.3,
+    "fps_efectivo_sin_mano": 28.5
+  },
+  "consecuencia_en_segmentacion": {
+    "periodo_frame_ms": 42.9,
+    "retardo_inicio_ms": 128.6,
+    "retardo_fin_ms": 257.1,
+    "tolerancia_perdida_ms": 128.6,
+    "presupuesto_ms": 500.0,
+    "pct_del_presupuesto": 51.4
+  },
+  "veredicto": [
+    "(A) Escena OSCURA: luminancia media 10/255 (< 60). Agregar luz frontal.",
+    "(A) Deteccion INESTABLE: mano en 51% de los frames (< 70%). Rachas sin mano de hasta 38 frames (se descarta la sena a las 4).",
+    "(B) La CPU es el cuello de botella: MediaPipe 21 ms vs lectura 5 ms. No lo arregla mas luz."
+  ]
+}

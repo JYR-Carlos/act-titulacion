@@ -1,0 +1,168 @@
+{
+  "sesion": {
+    "inicio": "2026-07-26T20:18:36",
+    "duracion_s": 118.84,
+    "fuente": "0",
+    "conf_threshold": 0.9,
+    "modo_manos": "dominante"
+  },
+  "recursos": {
+    "n_muestras": 109,
+    "duracion_s": 118.83,
+    "n_cpus_logicos": 12,
+    "cpu_pct_normalizado": {
+      "media": 10.2,
+      "min": 2.7,
+      "max": 45.8
+    },
+    "memoria_rss_mb": {
+      "media": 540.2,
+      "min": 518.9,
+      "max": 545.8
+    }
+  },
+  "captura": {
+    "fps_promedio_camara": 30.9,
+    "n_frames": 2698,
+    "n_frames_con_mano": 2215,
+    "tasa_deteccion_mano": 0.821,
+    "luminancia_media": 56.7,
+    "umbral_luminancia": 60.0,
+    "escena_oscura": true,
+    "realce_poca_luz": false
+  },
+  "latencia_e2e_ms": {
+    "umbral_ms": 500.0,
+    "n": 10,
+    "media_ms": 288.46,
+    "min_ms": 238.78,
+    "max_ms": 336.42,
+    "p95_ms": 334.53,
+    "n_excede_umbral": 0,
+    "pct_excede_umbral": 0.0
+  },
+  "reconocimiento": {
+    "n_clasificadas": 10,
+    "n_en_vocabulario": 6,
+    "n_fuera_vocabulario": 4,
+    "n_descartadas_tracking": 5,
+    "conteo_por_glosa": {
+      "Nombre": 2,
+      "Aceptar": 1,
+      "Ayuda": 2,
+      "Aparecer": 1
+    }
+  },
+  "historial_senas": [
+    {
+      "t_s": 37.14,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.4608,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 33.88,
+      "retardo_segmentacion_ms": 268.14,
+      "latencia_e2e_ms": 336.42,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 39.12,
+      "label": "Name",
+      "label_es": "Nombre",
+      "conf": 0.9996,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.54,
+      "retardo_segmentacion_ms": 248.9,
+      "latencia_e2e_ms": 275.62,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 41.48,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9881,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.17,
+      "retardo_segmentacion_ms": 210.41,
+      "latencia_e2e_ms": 238.84,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 44.17,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 0.9691,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.12,
+      "retardo_segmentacion_ms": 294.21,
+      "latencia_e2e_ms": 332.23,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 52.64,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 0.9922,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 0.89,
+      "retardo_segmentacion_ms": 274.97,
+      "latencia_e2e_ms": 297.77,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 54.58,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8218,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.0,
+      "retardo_segmentacion_ms": 239.17,
+      "latencia_e2e_ms": 272.88,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 95.89,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.6798,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.11,
+      "retardo_segmentacion_ms": 261.72,
+      "latencia_e2e_ms": 296.4,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 98.55,
+      "label": "Appear",
+      "label_es": "Aparecer",
+      "conf": 0.9999,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.09,
+      "retardo_segmentacion_ms": 265.24,
+      "latencia_e2e_ms": 299.86,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 105.38,
+      "label": "Name",
+      "label_es": "Nombre",
+      "conf": 1.0,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 0.89,
+      "retardo_segmentacion_ms": 216.62,
+      "latencia_e2e_ms": 238.78,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 114.05,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.6545,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 0.93,
+      "retardo_segmentacion_ms": 265.24,
+      "latencia_e2e_ms": 295.81,
+      "excede_umbral": false
+    }
+  ]
+}

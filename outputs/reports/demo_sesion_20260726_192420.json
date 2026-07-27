@@ -1,0 +1,161 @@
+{
+  "sesion": {
+    "inicio": "2026-07-26T19:20:35",
+    "duracion_s": 224.66,
+    "fuente": "0",
+    "conf_threshold": 0.9,
+    "modo_manos": "dominante"
+  },
+  "recursos": {
+    "n_muestras": 196,
+    "duracion_s": 224.59,
+    "n_cpus_logicos": 12,
+    "cpu_pct_normalizado": {
+      "media": 8.4,
+      "min": 2.8,
+      "max": 44.8
+    },
+    "memoria_rss_mb": {
+      "media": 543.2,
+      "min": 519.7,
+      "max": 546.3
+    }
+  },
+  "captura": {
+    "fps_promedio_camara": 29.0
+  },
+  "latencia_e2e_ms": {
+    "umbral_ms": 500.0,
+    "n": 10,
+    "media_ms": 306.2,
+    "min_ms": 268.23,
+    "max_ms": 367.99,
+    "p95_ms": 347.32,
+    "n_excede_umbral": 0,
+    "pct_excede_umbral": 0.0
+  },
+  "reconocimiento": {
+    "n_clasificadas": 10,
+    "n_en_vocabulario": 6,
+    "n_fuera_vocabulario": 4,
+    "n_descartadas_tracking": 5,
+    "conteo_por_glosa": {
+      "Aceptar": 2,
+      "Ayuda": 2,
+      "Aparecer": 1,
+      "Nombre": 1
+    }
+  },
+  "historial_senas": [
+    {
+      "t_s": 96.34,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9849,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 43.59,
+      "retardo_segmentacion_ms": 288.0,
+      "latencia_e2e_ms": 367.99,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 100.42,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 0.9999,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.07,
+      "retardo_segmentacion_ms": 274.76,
+      "latencia_e2e_ms": 305.76,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 116.55,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 0.9999,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 0.96,
+      "retardo_segmentacion_ms": 288.0,
+      "latencia_e2e_ms": 318.25,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 126.83,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9071,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.1,
+      "retardo_segmentacion_ms": 284.48,
+      "latencia_e2e_ms": 322.06,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 138.31,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.5654,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.2,
+      "retardo_segmentacion_ms": 281.38,
+      "latencia_e2e_ms": 314.33,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 143.95,
+      "label": "Appear",
+      "label_es": "Aparecer",
+      "conf": 0.9195,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.15,
+      "retardo_segmentacion_ms": 271.45,
+      "latencia_e2e_ms": 304.84,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 145.88,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.5808,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.63,
+      "retardo_segmentacion_ms": 242.48,
+      "latencia_e2e_ms": 277.3,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 158.64,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.5459,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.18,
+      "retardo_segmentacion_ms": 271.66,
+      "latencia_e2e_ms": 302.29,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 188.53,
+      "label": "Name",
+      "label_es": "Nombre",
+      "conf": 0.9921,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.16,
+      "retardo_segmentacion_ms": 242.28,
+      "latencia_e2e_ms": 268.23,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 207.95,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.491,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.34,
+      "retardo_segmentacion_ms": 248.69,
+      "latencia_e2e_ms": 280.99,
+      "excede_umbral": false
+    }
+  ]
+}
