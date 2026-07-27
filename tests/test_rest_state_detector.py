@@ -84,6 +84,57 @@ def test_perdida_tracking_sostenida_descarta():
     assert det.state == "reposo"
 
 
+def test_parpadeo_en_reposo_no_mata_el_candidato_de_inicio():
+    """Regresión de la sesión "noche" del 2026-07-26: con la mano detectada en
+    solo la mitad de los frames, la demo pasó 104 s sin segmentar UNA sola seña
+    ni reportar un descarte. Un hueco corto mientras se acumula movimiento no
+    puede borrar el candidato: si lo borra, con detección inestable no se
+    arranca nunca."""
+    det = RestStateDetector()
+    det.update(_mano_base())
+    eventos = []
+    # Movimiento sostenido, pero con un parpadeo intercalado cada dos frames.
+    for i in range(config.REST_FRAMES_INICIO + 2):
+        eventos.append(det.update(_frame_movido(0.3 * ((i % 2) * 2 - 1))))
+        eventos.append(det.update(None))          # parpadeo de 1 frame
+    assert SignEventType.START in [e.type for e in eventos]
+
+
+def test_parpadeo_largo_en_reposo_si_borra_el_candidato():
+    """La tolerancia es acotada: superarla vuelve a foja cero, o cualquier
+    movimiento aislado de hace un rato podría completar un inicio."""
+    det = RestStateDetector()
+    det.update(_mano_base())
+    det.update(_frame_movido(0.3))                # 1 frame de movimiento
+    for _ in range(config.REST_FRAMES_PERDIDA_MAX + 1):
+        assert det.update(None).type == SignEventType.IDLE
+    # Tras el hueco largo hacen falta otra vez `frames_inicio` frames movidos.
+    eventos = [det.update(_frame_movido(0.3 * ((i % 2) * 2 - 1)))
+               for i in range(config.REST_FRAMES_INICIO - 1)]
+    assert SignEventType.START not in [e.type for e in eventos]
+
+
+def test_vuelta_de_parpadeo_no_cuenta_como_reposo():
+    """Tras un parpadeo tolerado, el primer frame con mano debe medir su
+    movimiento contra la última mano vista. Antes `_prev` se soltaba en cuanto
+    faltaba un frame, ese frame devolvía movimiento 0.0 y contaba como reposo,
+    adelantando el cierre de la seña."""
+    det = RestStateDetector()
+    for _ in range(3):
+        det.update(_mano_base())
+    for i in range(10):
+        det.update(_frame_movido(0.3 * ((i % 2) * 2 - 1)))
+    assert det.capturando
+
+    det.update(None)                              # parpadeo tolerado
+    # La mano vuelve desplazada: es movimiento, no reposo, así que la seña sigue
+    # abierta y aún faltan `frames_fin` frames quietos para cerrarla.
+    ev = det.update(_frame_movido(0.5))
+    assert ev.type == SignEventType.CAPTURING
+    eventos = [det.update(_frame_movido(0.5)) for _ in range(det.frames_fin - 1)]
+    assert SignEventType.END not in [e.type for e in eventos]
+
+
 def test_movimiento_espurio_no_inicia():
     det = RestStateDetector()
     # Un único frame movido rodeado de reposo no debe confirmar inicio.

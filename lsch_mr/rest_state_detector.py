@@ -14,6 +14,17 @@ Máquina de estados que segmenta el inicio/fin de una seña por reposo
     motion blur o un ángulo raro es esperable, no evidencia de que la seña
     terminó o de que la mano se fue de verdad.
 
+    Esa misma tolerancia protege al CANDIDATO de inicio mientras se está en
+    reposo (corregido el 2026-07-26). Antes solo existía en "capturando", y en
+    reposo cualquier frame sin mano borraba el contador de movimiento: había que
+    encadenar `frames_inicio + 1` detecciones seguidas para arrancar (una extra
+    porque tras un hueco `_prev` quedaba en None y el primer frame de vuelta
+    medía movimiento 0). Con la detección al 51% que produce una escena oscura
+    —medido en `outputs/reports/diagnostico_captura_noche_*.json`— eso deja la
+    probabilidad de arrancar en ~7% por intento, y la demo pasa sesiones enteras
+    en "ESCUCHANDO" sin segmentar una sola seña ni reportar un solo descarte.
+    Con luz buena el síntoma no aparece, que es por qué sobrevivió hasta ahora.
+
 La métrica de movimiento es el desplazamiento medio por landmark entre frames,
 escalado por el tamaño de la mano (distancia L0–L9). Así el umbral es invariante
 a la escala / distancia a la cámara, igual que el KeypointNormalizer.
@@ -71,15 +82,31 @@ class RestStateDetector:
 
         # --- Pérdida de tracking --------------------------------------- #
         if frame is None:
-            self._prev = None
+            self._perdida_count += 1
+            tolerado = self._perdida_count <= self.frames_perdida_max
+
             if self.state == "capturando":
-                self._perdida_count += 1
-                if self._perdida_count > self.frames_perdida_max:
+                if not tolerado:
                     self.reset()
                     return SignEvent(SignEventType.DISCARDED)
                 # Parpadeo tolerado: no se apila nada este frame (no hay
                 # payload), pero la captura sigue viva.
                 return SignEvent(SignEventType.CAPTURING)
+
+            # En reposo la tolerancia protege al candidato de inicio, que solo
+            # existe si ya se acumuló movimiento. Sin candidato en curso no hay
+            # nada que sostener y se sale por el camino de abajo.
+            if tolerado and self._mov_count > 0:
+                return SignEvent(SignEventType.IDLE)
+
+            # Hueco largo (o reposo sin candidato): se olvida todo. `_prev` se
+            # suelta SOLO aquí. Mientras el parpadeo esté dentro de la
+            # tolerancia se conserva, para que el primer frame en que vuelve la
+            # mano mida su movimiento contra la última mano vista en vez de
+            # devolver 0.0 y contar como reposo — que en capturando adelantaba
+            # el cierre de la seña y en reposo tiraba el candidato de inicio.
+            self._prev = None
+            self._perdida_count = 0
             self._mov_count = 0
             self._buffer.clear()
             return SignEvent(SignEventType.IDLE)

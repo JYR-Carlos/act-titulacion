@@ -172,6 +172,59 @@ frames de reposo que hacen falta para confirmar el fin de la seña), no solo la
 inferencia: medir únicamente el ONNX daría ~3 ms, una cifra irrelevante frente al
 presupuesto de 500 ms.
 
+Al salir (`q`/ESC, Ctrl+C o una excepción) la demo guarda un reporte de la
+sesión en `outputs/reports/demo_sesion_<fecha>.json`, más un CSV
+`..._recursos.csv` con la serie temporal de CPU/memoria:
+
+```json
+{
+  "sesion": {"duracion_s": 12.2, "fuente": "0", "conf_threshold": 0.9, ...},
+  "recursos": {"cpu_pct_normalizado": {"media": 15.8, "max": 31.8}, "memoria_rss_mb": {...}},
+  "captura": {"fps_promedio_camara": 17.0, "tasa_deteccion_mano": 0.94, "luminancia_media": 118.4, ...},
+  "latencia_e2e_ms": {"umbral_ms": 500.0, "media_ms": 407.9, "pct_excede_umbral": 0.0, ...},
+  "reconocimiento": {"n_en_vocabulario": 2, "conteo_por_glosa": {"Gracias": 2}, ...},
+  "historial_senas": ["..."]
+}
+```
+
+`recursos` viene de `MonitorRecursos` (`lsch_mr/monitor_recursos.py`), que
+muestrea CPU%/memoria del proceso una vez por segundo. El diseño no fija un
+umbral de aprobación para uso de recursos — solo para accuracy, latencia,
+FPS de renderizado y task success rate (Sección 3) — así que este reporte no
+inventa uno: deja el dato medido, estructurado, para cuando haya que
+presentarlo. `latencia_e2e_ms` y `reconocimiento` sí corresponden a métricas
+del diseño y quedan con su distribución completa (media/p95/max, % que excede
+el umbral), no solo el último valor que se ve por consola.
+
+`captura` responde la pregunta previa a todas las demás: **¿la cámara llegó a
+ver la mano?** Sin `tasa_deteccion_mano` una sesión con `"n_clasificadas": 0` es
+ambigua — puede ser que el modelo no reconociera nada o que MediaPipe nunca
+encontrara la palma, y son problemas opuestos. La cabecera de la demo muestra
+los mismos datos en vivo (`Mano: SI/NO`, `deteccion NN%`, `luz NN/255`).
+
+#### Si la demo no reconoce nada (poca luz, sesión de noche)
+
+```powershell
+python diagnostico_captura.py --etiqueta noche           # 20 s de medición
+python diagnostico_captura.py --etiqueta noche-realce --realce
+```
+`diagnostico_captura.py` separa las dos causas que dan el mismo síntoma: la
+escena/cámara (poca luz, exposición larga, motion blur) y el throughput del
+pipeline (a menos FPS, las constantes `REST_FRAMES_*` —que están en frames— se
+traducen en más milisegundos). Guarda un JSON por condición para poder
+comparar; el discriminador es `t_lectura_ms` vs `t_mediapipe_ms`.
+
+Con la escena oscura, la palanca de software es el realce adaptativo:
+
+```powershell
+python demo_vivo.py --realce
+```
+Sube el contraste antes de MediaPipe **solo** si la luminancia media está bajo
+60/255 (~3 ms por frame; en luz normal no toca la imagen). Va detrás de un flag
+porque el corpus LSA64 se extrajo sin realce: ver `lsch_mr/realce_luz.py` para
+el razonamiento y cómo medir si conviene. **Más luz física siempre gana**: el
+realce es la red de seguridad, no el arreglo.
+
 ### 6) Preparar la integración con Unity
 
 ```powershell
@@ -325,8 +378,11 @@ pytest -q
 ```
 `tests/` cubre el `KeypointNormalizer` (invariancia a traslación/escala, casos
 degenerados), el `RestStateDetector` (segmentación por reposo, descarte por
-pérdida de tracking) y el `MessageComposer` (acumulación, `maxWords`, cierre por
-timeout con reloj inyectable, reinicio manual de FA-01).
+pérdida de tracking), el `MessageComposer` (acumulación, `maxWords`, cierre por
+timeout con reloj inyectable, reinicio manual de FA-01), `MonitorRecursos`
+(muestreo por intervalo y agregados, con lector y reloj inyectables) y las
+funciones de reporte de `demo_vivo.py` (distribución de latencia, conteos de
+reconocimiento).
 
 Además, `python generar_vectores_dorados.py --verificar` comprueba que el
 preprocesamiento no cambió respecto a los vectores de referencia del port a C#.
@@ -351,6 +407,8 @@ lsch_mr/                 paquete con los componentes del diseño
   model_exporter.py      ModelExporter
   sign_classifier.py     SignClassifier
   message_composer.py    MessageComposer
+  monitor_recursos.py    MonitorRecursos (CPU/memoria de la sesión de demo)
+  realce_luz.py          realce adaptativo de frames oscuros (demo --realce)
 descargar_modelo.py      descarga hand_landmarker.task
 extraer_keypoints.py     CLI extracción (webcam/video)
 extraer_lote.py          CLI extracción por lotes (dataset de referencia)
@@ -359,6 +417,7 @@ build_dataset.py         CLI crudo -> dataset normalizado
 entrenar.py              CLI entrenamiento
 exportar_onnx.py         CLI exportación ONNX
 demo_vivo.py             CLI validación end-to-end en PC (orquestador de referencia)
+diagnostico_captura.py   CLI diagnóstico de captura: luz/cámara vs throughput
 generar_vectores_dorados.py  vectores de prueba para el port del preproceso a C#
 generar_secuencia_dorada.py  vectores de prueba de una secuencia real (Capa 1+2)
 integracion/             artefactos para el repo de Unity (vectores dorados)

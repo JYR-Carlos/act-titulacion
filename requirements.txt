@@ -12,6 +12,7 @@ onnx>=1.16
 onnxruntime>=1.19
 scikit-learn>=1.4
 matplotlib>=3.8
+psutil>=5.9                # MonitorRecursos (demo_vivo.py): CPU/memoria del proceso
 
 # --- Entrenamiento + exportación a ONNX (instalar cuando se vaya a entrenar) --
 # TensorFlow 2.16+ soporta Python 3.12 y numpy 2. Trae Keras 3 por defecto; el
