@@ -76,6 +76,17 @@ class MonitorRecursos:
     def muestras(self) -> list[dict]:
         return list(self._muestras)
 
+    @property
+    def ultima_muestra(self) -> Optional[dict]:
+        """La muestra más reciente, o None si todavía no se tomó ninguna.
+
+        Pensada para el overlay de demo_vivo.py, que la lee una vez por frame:
+        a diferencia de `muestras` no copia la lista (que crece toda la
+        sesión). Devuelve el mismo dict que va al CSV y al reporte, así que lo
+        que se ve en pantalla no puede diverger de la evidencia guardada.
+        """
+        return self._muestras[-1] if self._muestras else None
+
     def resumen(self) -> dict:
         """Estadísticos agregados. Sin muestras -> solo metadatos de sesión."""
         base = {

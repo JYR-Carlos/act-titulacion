@@ -42,6 +42,31 @@ def test_muestrea_al_cumplirse_el_intervalo():
     assert m["memoria_rss_mb"] == 200.0
 
 
+def test_ultima_muestra_es_none_hasta_la_primera():
+    reloj = _Reloj()
+    mon = MonitorRecursos(lector=_lector_fijo([(10.0, 100 * 1024 ** 2)]),
+                          n_cpus=1, intervalo_s=1.0, reloj=reloj)
+    assert mon.ultima_muestra is None
+    reloj.avanzar(1.0)
+    mon.tick()
+    assert mon.ultima_muestra is not None
+
+
+def test_ultima_muestra_sigue_a_la_mas_reciente():
+    """Lo que lee el overlay de demo_vivo.py tiene que ser el mismo dict que se
+    guarda en el CSV, no una copia que pueda quedar atrás."""
+    reloj = _Reloj()
+    lecturas = [(10.0, 100 * 1024 ** 2), (30.0, 150 * 1024 ** 2)]
+    mon = MonitorRecursos(lector=_lector_fijo(lecturas), n_cpus=2,
+                          intervalo_s=1.0, reloj=reloj)
+    for _ in lecturas:
+        reloj.avanzar(1.0)
+        mon.tick()
+    assert mon.ultima_muestra == mon.muestras[-1]
+    assert mon.ultima_muestra["cpu_pct_normalizado"] == 15.0  # 30% / 2 cores
+    assert mon.ultima_muestra["memoria_rss_mb"] == 150.0
+
+
 def test_resumen_agrega_media_min_max():
     reloj = _Reloj()
     lecturas = [(10.0, 100 * 1024 ** 2), (30.0, 150 * 1024 ** 2), (20.0, 120 * 1024 ** 2)]

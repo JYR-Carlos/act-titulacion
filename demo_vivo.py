@@ -424,7 +424,8 @@ def main() -> int:
                     _dibujar_puntos(cv2, frame_mostrado, multi, mostrar_espejo)
                 aviso_activo = aviso_txt if time.monotonic() < aviso_hasta else ""
                 _overlay(cv2, frame_mostrado, detector, composer, ultimo, periodo,
-                         vocab_es, args.conf, estado_ui, captura, aviso_activo)
+                         vocab_es, args.conf, estado_ui, captura, monitor,
+                         aviso_activo)
                 cv2.imshow(NOMBRE_VENTANA, frame_mostrado)
 
                 if recien_clasificada:
@@ -519,7 +520,7 @@ def _dibujar_puntos(cv2, frame, multi, mostrar_espejo: bool) -> None:
 
 def _overlay(cv2, frame, detector, composer, ultimo: Medicion, periodo,
             vocab_es: list[str], umbral_conf: float, estado_ui: dict,
-            captura: EstadoCaptura, aviso: str = ""):
+            captura: EstadoCaptura, monitor: MonitorRecursos, aviso: str = ""):
     # Nota: OpenCV no renderiza tildes con las fuentes Hershey — por eso las
     # traducciones de ETIQUETAS_ES y los rótulos de aquí van sin acentos.
     F = cv2.FONT_HERSHEY_SIMPLEX
@@ -606,6 +607,19 @@ def _overlay(cv2, frame, detector, composer, ultimo: Medicion, periodo,
             txt_luz += " BAJA"
         cv2.putText(frame, txt_luz, (x_salud, y_salud), F, 0.42 * s,
                     _COLOR_ALERTA if oscura else _COLOR_TEXTO_TENUE, 1, cv2.LINE_AA)
+
+    # Recursos del proceso, a la derecha de la misma fila (no junto al FPS: ahí
+    # el texto empujaría al boton "Puntos" hasta chocar con "CAPTURANDO SENA..."
+    # a 480p). Es la última muestra de MonitorRecursos —el mismo dato que va al
+    # CSV y al reporte—, así que la pantalla no puede diverger de la evidencia
+    # guardada. Vacío el primer segundo, hasta que haya una muestra.
+    muestra = monitor.ultima_muestra
+    if muestra is not None:
+        rec_txt = (f"RAM {muestra['memoria_rss_mb']:.0f} MB  |  "
+                   f"CPU {muestra['cpu_pct_normalizado']:.1f}%")
+        (rec_w, _), _ = cv2.getTextSize(rec_txt, F, 0.42 * s, 1)
+        cv2.putText(frame, rec_txt, (w - rec_w - int(14 * s), y_salud), F,
+                    0.42 * s, _COLOR_TEXTO_TENUE, 1, cv2.LINE_AA)
 
     # -- Tarjeta: última seña reconocida + barra de confianza ---------------- #
     y0 = header_h + int(14 * s)
