@@ -39,6 +39,23 @@ def _dataset_sintetico(n_por_clase=40, n_clases=10):
     return np.stack(X), np.asarray(y, dtype="int64"), classes
 
 
+def _etiqueta_dataset(ds: Path, X: np.ndarray) -> str:
+    """Etiqueta del modo de manos, para nombrar los reportes de la CV.
+
+    Se lee del propio `.npz` (`build_dataset.py` guarda ahí `modo_manos`), y si
+    ese campo no está —datasets antiguos— se deduce del ancho del vector de
+    características. Sin esto, evaluar los dos modos sobrescribe el mismo
+    `cv_metrics.json` y las cifras del informe dejan de ser rastreables.
+    """
+    try:
+        data = np.load(ds, allow_pickle=True)
+        if "modo_manos" in data:
+            return str(data["modo_manos"])
+    except Exception:
+        pass
+    return "ambas" if X.shape[2] == config.NORMVECTOR_DIM * 2 else "dominante"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Entrenamiento del TCN (ModelTrainer)")
     ap.add_argument("--dataset", default=str(config.DATA_PROCESSED_DIR / "dataset.npz"))
@@ -65,6 +82,7 @@ def main() -> int:
     if args.sintetico:
         print("[entrenar] Usando dataset SINTÉTICO (solo para probar el pipeline).")
         X, y, classes = _dataset_sintetico()
+        etiqueta = "sintetico"
     else:
         ds = Path(args.dataset)
         if not ds.exists():
@@ -72,6 +90,7 @@ def main() -> int:
                   "--sintetico.")
             return 1
         X, y, classes = ModelTrainer.cargar_dataset(ds)
+        etiqueta = _etiqueta_dataset(ds, X)
 
     print(f"[entrenar] X={X.shape}  clases={classes}")
     trainer = ModelTrainer(epochs=args.epochs, cv_folds=args.cv_folds)
@@ -91,7 +110,7 @@ def main() -> int:
     if args.cv:
         print(f"\n[entrenar] Validación cruzada estratificada "
               f"({args.cv_folds}-fold) — entrena {args.cv_folds} modelos.")
-        cv = trainer.evaluar_cv(X, y, classes, groups=grupos)
+        cv = trainer.evaluar_cv(X, y, classes, groups=grupos, etiqueta=etiqueta)
         print("\n===== VALIDACIÓN CRUZADA =====")
         print(f"  accuracy       : {cv.resumen()}")
         print("  por fold       : " +

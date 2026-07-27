@@ -58,6 +58,11 @@ class CVMetrics:
         return {"n_splits": self.n_splits,
                 "esquema": self.esquema,
                 "n_grupos": self.n_grupos,
+                # Se guardan para que el JSON se baste solo: `evaluar_modelo.py
+                # --fuente cv` reconstruye el reporte sin tener que adivinar el
+                # orden de las clases desde labels.json (que puede haber sido
+                # sobrescrito por un entrenamiento posterior con otro corpus).
+                "classes": self.classes,
                 "fold_accuracies": self.fold_accuracies,
                 "mean_accuracy": self.mean_accuracy,
                 "std_accuracy": self.std_accuracy,
@@ -152,6 +157,38 @@ class ModelTrainer:
 
         return np.array(grupos, dtype=object)
 
+    @staticmethod
+    def split_indices(y: np.ndarray,
+                      n_clases: int,
+                      val_split: float = config.ENTRENAMIENTO_VAL_SPLIT,
+                      seed: int = config.SEMILLA) -> tuple[np.ndarray, np.ndarray]:
+        """Índices `(entrenamiento, validación)` del split 80/20 de `train()`.
+
+        Existe para que **`train()` y `evaluar_modelo.py` usen literalmente el
+        mismo reparto**. El script de evaluación tiene que medir el modelo
+        exportado sobre las muestras que ese modelo no vio; si reconstruyera el
+        split por su cuenta y algún parámetro se desincronizara (la semilla, el
+        porcentaje, el criterio de estratificación), evaluaría sobre datos de
+        entrenamiento y devolvería una accuracy inflada **sin dar ningún error**.
+        Una sola fuente de verdad hace imposible esa divergencia.
+
+        Devuelve índices, no arrays: `train_test_split` aplica el mismo reparto a
+        todos los arrays que recibe, así que partir los índices y luego indexar
+        da exactamente la misma partición que partir X e y directamente.
+        """
+        from sklearn.model_selection import train_test_split
+
+        y = np.asarray(y, dtype="int64")
+        # Estratificado solo si cada clase tiene >=2 muestras (una clase con 1
+        # muestra no se puede repartir entre los dos lados).
+        estratifica = bool(len(y)) and bool(
+            np.all(np.bincount(y, minlength=n_clases) >= 2))
+        idx = np.arange(len(y))
+        idx_tr, idx_va = train_test_split(
+            idx, test_size=val_split, random_state=seed,
+            stratify=y if estratifica else None)
+        return idx_tr, idx_va
+
     # -- Helpers compartidos train() / evaluar_cv() -------------------------- #
     # Ambos modos deben entrenar EXACTAMENTE la misma arquitectura y receta;
     # si no, la estimación k-fold no describiría al modelo que se exporta.
@@ -190,7 +227,6 @@ class ModelTrainer:
         """
         import tensorflow as tf
         from sklearn.metrics import classification_report, confusion_matrix
-        from sklearn.model_selection import train_test_split
 
         tf.random.set_seed(self.seed)
         np.random.seed(self.seed)
@@ -199,11 +235,11 @@ class ModelTrainer:
         y = np.asarray(y, dtype="int64")
         n_classes = len(classes)
 
-        # Estratificado si cada clase tiene ≥2 muestras; si no, split simple.
-        estratifica = all(np.bincount(y, minlength=n_classes) >= 2)
-        Xtr, Xva, ytr, yva = train_test_split(
-            X, y, test_size=self.val_split, random_state=self.seed,
-            stratify=y if estratifica else None)
+        # El reparto vive en `split_indices` para que `evaluar_modelo.py` pueda
+        # reproducir EXACTAMENTE este 20% de validación (ver su docstring).
+        idx_tr, idx_va = self.split_indices(y, n_classes, self.val_split, self.seed)
+        Xtr, Xva = X[idx_tr], X[idx_va]
+        ytr, yva = y[idx_tr], y[idx_va]
 
         self.model = self._nuevo_modelo(seq_len=X.shape[1],
                                         n_features=X.shape[2],
@@ -257,7 +293,8 @@ class ModelTrainer:
                    n_splits: Optional[int] = None,
                    reports_dir: Path = config.OUTPUTS_REPORTS_DIR,
                    verbose: int = 0,
-                   groups: Optional[np.ndarray] = None) -> CVMetrics:
+                   groups: Optional[np.ndarray] = None,
+                   etiqueta: str = "") -> CVMetrics:
         """Validación cruzada k-fold sobre todo el corpus.
 
         Entrena un modelo por fold (misma arquitectura y receta que `train()`)
@@ -360,9 +397,18 @@ class ModelTrainer:
             y, y_pred_oof, labels=etiquetas, target_names=classes,
             output_dict=True, zero_division=0)
 
-        # Sufijo distinto por esquema: los dos resultados son complementarios y
-        # no deben pisarse el uno al otro en el informe.
-        sufijo = "_senante" if groups is not None else ""
+        # Sufijo distinto por esquema Y por modo de manos: los cuatro resultados
+        # (2 modos x 2 esquemas) son complementarios y no deben pisarse entre sí.
+        #
+        # Antes el sufijo solo distinguía el esquema, así que la corrida de
+        # `ambas` sobrescribía la de `dominante` y había que renombrar los JSON a
+        # mano. Eso es lo que dejó cifras huérfanas en el informe: la tabla de
+        # ESTADO_ACTUAL.md citaba un 0.903 cuyo JSON ya no existía en disco.
+        # Con el modo en el nombre, cada corrida tiene su archivo por
+        # construcción y la tabla siempre se puede rastrear hasta él.
+        partes = [p for p in (etiqueta.strip(),
+                              "senante" if groups is not None else "") if p]
+        sufijo = ("_" + "_".join(partes)) if partes else ""
         reports_dir = Path(reports_dir); reports_dir.mkdir(parents=True, exist_ok=True)
         cm_png = self._plot_confusion(
             cm, classes, reports_dir / f"matriz_confusion_cv{sufijo}.png",
