@@ -75,6 +75,11 @@ def main() -> int:
                          "sample_id separado por '_' (p.ej. 2 para "
                          "clase_senante_repeticion), o una regex con un grupo "
                          "de captura. Implica --cv")
+    ap.add_argument("--cv-grupos-forzar", action="store_true",
+                    help="desactiva las guardas heurísticas de --cv-grupos "
+                         "(demasiados grupos, otro campo mejor candidato). Úsalo "
+                         "solo si comprobaste a mano que el agrupamiento es el "
+                         "correcto")
     args = ap.parse_args()
     if args.solo_cv or args.cv_grupos:
         args.cv = True
@@ -100,11 +105,22 @@ def main() -> int:
         if args.sintetico:
             print("[entrenar] --cv-grupos no aplica al dataset sintético.")
             return 1
-        grupos = ModelTrainer.cargar_grupos(Path(args.dataset), args.cv_grupos)
+        try:
+            grupos = ModelTrainer.cargar_grupos(Path(args.dataset), args.cv_grupos)
+        except ValueError as e:
+            # sample_id que no encaja con el patrón: mejor un mensaje que un
+            # traceback, porque casi siempre es la convención de nombres del
+            # corpus y no un bug.
+            raise SystemExit(f"\nERROR: {e}")
         if grupos is None:
             print("[entrenar] El dataset no guarda 'sample_ids'; regenéralo con "
                   "build_dataset.py para poder evaluar por señante.")
             return 1
+        # Verificación ruidosa ANTES de entrenar: agrupar por el campo
+        # equivocado infla la métrica principal del proyecto sin fallar.
+        ModelTrainer.verificar_grupos(
+            ModelTrainer.cargar_sample_ids(Path(args.dataset)) or [],
+            grupos, y, args.cv_grupos, forzar=args.cv_grupos_forzar)
 
     cv = None
     if args.cv:

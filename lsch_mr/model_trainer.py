@@ -157,6 +157,183 @@ class ModelTrainer:
 
         return np.array(grupos, dtype=object)
 
+    # -- Guardas del agrupamiento por señante -------------------------------- #
+    # Pasar el número de campo equivocado a --cv-grupos NO da error por sí solo:
+    # agrupa por otra cosa (la clase, el índice de repetición) y la validación
+    # cruzada vuelve a dejar al mismo señante a ambos lados del fold. La métrica
+    # principal del proyecto queda inflada y nada falla de forma visible. Estas
+    # guardas existen para convertir ese fallo silencioso en un error ruidoso.
+
+    # Por encima de esto es más probable que el campo enumere muestras que
+    # personas. Se puede saltar con --cv-grupos-forzar.
+    GRUPOS_MAX_PLAUSIBLE = 50
+
+    @staticmethod
+    def cargar_sample_ids(npz_path: Path) -> Optional[list[str]]:
+        """Lista de `sample_id` del dataset, o None si el `.npz` no los guarda."""
+        data = np.load(npz_path, allow_pickle=True)
+        if "sample_ids" not in data:
+            return None
+        return [str(s) for s in data["sample_ids"]]
+
+    @staticmethod
+    def _perfil_agrupamiento(grupos: np.ndarray, y: np.ndarray) -> dict:
+        """Forma del agrupamiento: cuántos grupos, de qué tamaño y qué clases cubren.
+
+        `clases_max == 1` significa que cada grupo contiene una sola clase, o sea
+        que se está agrupando por la etiqueta y no por el señante.
+        """
+        grupos = np.asarray(grupos)
+        y = np.asarray(y, dtype="int64")
+        valores, inversa = np.unique(grupos, return_inverse=True)
+        inversa = np.asarray(inversa).ravel()
+        tam = np.bincount(inversa, minlength=len(valores))
+        clases = np.array([len(np.unique(y[inversa == i])) for i in range(len(valores))])
+        return {"n_grupos": int(len(valores)),
+                "ejemplos": [str(v) for v in valores[:3]],
+                "tam_min": int(tam.min()), "tam_max": int(tam.max()),
+                "clases_min": int(clases.min()), "clases_max": int(clases.max()),
+                "clases_mediana": float(np.median(clases))}
+
+    @staticmethod
+    def _es_identidad_plausible(perfil: dict, n_muestras: int, n_clases: int) -> bool:
+        """¿Puede este agrupamiento describir a *personas* que grabaron el corpus?
+
+        El criterio que hace el trabajo es el último: un señante graba el
+        vocabulario entero, así que su grupo cubre buena parte de las clases. Un
+        contador de tomas (`s01_0001`) produce grupos de una o dos muestras que
+        no cubren nada, y así queda descartado como candidato.
+        """
+        if not 2 <= perfil["n_grupos"] <= ModelTrainer.GRUPOS_MAX_PLAUSIBLE:
+            return False
+        if perfil["n_grupos"] >= n_muestras:
+            return False
+        if n_clases > 1 and perfil["clases_max"] == 1:
+            return False
+        return n_clases <= 1 or perfil["clases_mediana"] >= max(2, n_clases / 2)
+
+    @staticmethod
+    def verificar_grupos(sample_ids: list[str], grupos: np.ndarray, y: np.ndarray,
+                         patron: str, *, forzar: bool = False,
+                         imprimir: bool = True) -> dict:
+        """Diagnostica el agrupamiento y aborta si es implausible.
+
+        Imprime **siempre** con qué se agrupó, cuántos grupos salieron, tres
+        identificadores de ejemplo y el tamaño mín./máx. de grupo: sin eso, un
+        `--cv-grupos` mal puesto no deja ninguna huella en la salida.
+
+        Aborta con `SystemExit` en tres casos que son estructuralmente
+        imposibles —un solo grupo, un grupo por muestra, o cada grupo con una
+        sola clase— y en dos heurísticos que `--cv-grupos-forzar` desactiva:
+        demasiados grupos, y que otro campo del `sample_id` sea mejor candidato.
+
+        Devuelve el perfil del agrupamiento elegido.
+        """
+        grupos = np.asarray(grupos)
+        y = np.asarray(y, dtype="int64")
+        n_muestras = int(len(grupos))
+        n_clases = int(len(np.unique(y)))
+        perfil = ModelTrainer._perfil_agrupamiento(grupos, y)
+
+        campo = int(patron.strip()) if patron.strip().isdigit() else None
+        origen = (f"campo {campo} del sample_id" if campo
+                  else f"regex {patron!r} sobre el sample_id")
+        if imprimir:
+            print(f"[grupos] {origen} -> {perfil['n_grupos']} grupos")
+            print("[grupos] ejemplos: " +
+                  ", ".join(repr(e) for e in perfil["ejemplos"]))
+            print(f"[grupos] muestras por grupo: min={perfil['tam_min']}  "
+                  f"max={perfil['tam_max']}  ({n_muestras} en total)")
+
+        pista = ("Revisa el número de campo: en LSA64 (017_001_001 = "
+                 "clase_senante_repeticion) el señante es el campo 2; en un corpus "
+                 "de grabar_corpus.py (s01_0001) es el campo 1.")
+
+        if perfil["n_grupos"] < 2:
+            raise SystemExit(
+                f"\nERROR: {origen} produce un solo grupo, así que no queda "
+                "ningún señante fuera y la validación cruzada por señante no "
+                f"mide nada.\n{pista}")
+
+        if perfil["n_grupos"] >= n_muestras:
+            raise SystemExit(
+                f"\nERROR: {origen} produce {perfil['n_grupos']} grupos para "
+                f"{n_muestras} muestras, o sea uno por muestra. Eso agrupa por "
+                "el identificador de la toma, no por la persona, y equivale a no "
+                f"agrupar en absoluto.\n{pista}")
+
+        if n_clases > 1 and perfil["clases_max"] == 1:
+            raise SystemExit(
+                f"\nERROR: {origen} produce {perfil['n_grupos']} grupos y cada "
+                "uno contiene una sola clase: se está agrupando por la GLOSA, no "
+                "por el señante. Cada fold entrenaría sin haber visto nunca las "
+                f"clases que luego evalúa.\n{pista}")
+
+        if perfil["n_grupos"] > ModelTrainer.GRUPOS_MAX_PLAUSIBLE and not forzar:
+            raise SystemExit(
+                f"\nERROR: {origen} produce {perfil['n_grupos']} grupos "
+                f"(máximo plausible {ModelTrainer.GRUPOS_MAX_PLAUSIBLE}). Un "
+                "corpus con tantos señantes es improbable; lo normal es que el "
+                f"campo enumere muestras.\n{pista}\n"
+                "Si el corpus de verdad tiene tantos señantes: --cv-grupos-forzar.")
+
+        # -- Heurística del campo dominado ----------------------------------- #
+        # Solo aplica al elegir por número de campo. En un corpus con cruce
+        # completo (clase x señante x repetición) los campos "señante" y
+        # "repetición" son indistinguibles por estructura: los dos parten el
+        # corpus en grupos que cubren todas las clases. Lo único que los
+        # distingue es la cardinalidad, y el señante es siempre el más fino de
+        # los dos —hay más personas que repeticiones por persona—. Así que si
+        # otro campo plausible produce MÁS grupos, el elegido casi seguro es el
+        # contador de repeticiones.
+        if campo is not None and not forzar:
+            tabla = ModelTrainer._campos_candidatos(sample_ids, y, n_clases)
+            mejor = max((c for c in tabla
+                         if c["plausible"] and c["n_grupos"] > perfil["n_grupos"]),
+                        key=lambda c: c["n_grupos"], default=None)
+            if mejor is not None:
+                filas = []
+                for c in tabla:
+                    nota = ""
+                    if c["campo"] == campo:
+                        nota = "  (elegido)"
+                    elif c["campo"] == mejor["campo"]:
+                        nota = "  <- candidato más fino"
+                    elif not c["plausible"]:
+                        nota = "  (no describe personas)"
+                    filas.append(f"  campo {c['campo']} -> {c['n_grupos']:>3} "
+                                 f"grupos{nota}")
+                raise SystemExit(
+                    f"\nERROR: el campo {campo} produce {perfil['n_grupos']} "
+                    f"grupos, pero el campo {mejor['campo']} produce "
+                    f"{mejor['n_grupos']}, también plausibles. Un campo con menos "
+                    "grupos suele ser un contador de repeticiones, no una "
+                    "identidad: agrupar por él infla la métrica en silencio "
+                    "porque el mismo señante sigue a ambos lados del fold.\n"
+                    + "\n".join(filas) +
+                    f"\nUsa --cv-grupos {mejor['campo']}, o --cv-grupos-forzar si "
+                    f"de verdad el señante es el campo {campo}.")
+
+        return perfil
+
+    @staticmethod
+    def _campos_candidatos(sample_ids: list[str], y: np.ndarray,
+                           n_clases: int) -> list[dict]:
+        """Perfil de agrupar por cada campo del `sample_id`, con su plausibilidad."""
+        sids = [str(s) for s in sample_ids]
+        if not sids:
+            return []
+        n_campos = min(len(s.split("_")) for s in sids)
+        tabla = []
+        for campo in range(1, n_campos + 1):
+            perfil = ModelTrainer._perfil_agrupamiento(
+                np.array([s.split("_")[campo - 1] for s in sids], dtype=object), y)
+            perfil["campo"] = campo
+            perfil["plausible"] = ModelTrainer._es_identidad_plausible(
+                perfil, len(sids), n_clases)
+            tabla.append(perfil)
+        return tabla
+
     @staticmethod
     def split_indices(y: np.ndarray,
                       n_clases: int,
