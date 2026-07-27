@@ -56,4 +56,4 @@ jobs:
       # commit lo deja inconsistente con labels.json, el fallo aparecería en el
       # otro repo —cargando bien y prediciendo basura— en vez de aquí.
       - name: Verificar el artefacto que consume Unity
-        run: python verificar_artefactos.py
+        run: python scripts/verificar_artefactos.py

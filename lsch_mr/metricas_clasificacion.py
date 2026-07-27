@@ -6,7 +6,7 @@ convierten un par `(y_true, y_pred)` en lo que pide el informe: accuracy global,
 accuracy por seña, matriz de confusión 10x10 y el veredicto contra el umbral
 `config.ACCURACY_OBJETIVO`. Viven aquí y no en el script para poder testearlas
 sin modelo, sin dataset y sin cámara — el mismo criterio que siguen
-`_resumen_latencias` en `demo_vivo.py` y `MonitorRecursos`.
+`_resumen_latencias` en `scripts/demo_vivo.py` y `MonitorRecursos`.
 
 Convención de la matriz de confusión, igual que en `ModelTrainer`:
 **filas = clase real, columnas = clase predicha**. La diagonal son los aciertos.

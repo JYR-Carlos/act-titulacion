@@ -7,7 +7,7 @@ dedo medio). El resultado (NormVector, 63 dim) es invariante a traslación y a
 escala (tamaño de mano / distancia a la cámara).
 
 Decisión: implementación propia, NO se reutiliza código de terceros
-(ver DECISION_PREPROCESAMIENTO.md).
+(ver docs/DECISION_PREPROCESAMIENTO.md).
 """
 from __future__ import annotations
 

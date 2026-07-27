@@ -15,14 +15,14 @@ Tres scripts C# que miden **latencia end-to-end** (métrica 2) y **FPS**
 
 **1. Estos archivos no se compilan en este repositorio.** Aquí solo vive el
 subsistema de IA/datos en Python; no hay proyecto Unity ni ningún otro `.cs`
-(ver `ESTADO_ACTUAL.md`). El código está escrito contra la API pública de Unity
+(ver `docs/ESTADO_ACTUAL.md`). El código está escrito contra la API pública de Unity
 (`MonoBehaviour`, `Time`, `Application`, `WaitForEndOfFrame`) y no depende de
 Sentis ni del Meta XR SDK, pero **no ha sido compilado ni ejecutado**. Al
 integrarlo en el repo de Unity espera tener que ajustar los `namespace` y los
 nombres de los métodos del controlador que llama a los ganchos.
 
 **2. El umbral de 72 FPS es del Meta Quest 3, que está fuera del alcance actual.**
-La decisión del 2026-07-21 (`ESTADO_ACTUAL.md`) sacó el Quest 3 del camino
+La decisión del 2026-07-21 (`docs/ESTADO_ACTUAL.md`) sacó el Quest 3 del camino
 crítico: la demo corre en **PC con webcam**. En PC, con VSync activo, el FPS
 queda clavado en la tasa del monitor (típicamente 60 Hz) y la comparación
 contra 72 no significa nada. Opciones, en orden de honestidad decreciente:
@@ -53,7 +53,7 @@ en un PC a 60 Hz con VSync sería una cifra inventada.
 ## Cableado: cuatro ganchos
 
 Desde tu controlador de sesión de traducción (el equivalente en Unity de
-`demo_vivo.py`), llama a los cuatro Mark* en el orden del pipeline:
+`scripts/demo_vivo.py`), llama a los cuatro Mark* en el orden del pipeline:
 
 ```csharp
 public class TranslationSessionController : MonoBehaviour
@@ -79,7 +79,7 @@ public class TranslationSessionController : MonoBehaviour
         metrics.OnSignSegmented();                  // (2) fin de seña confirmado
 
         // --- Capa 2 + 3: preprocesamiento e inferencia ---
-        var input  = FeaturePipeline.Prepare(evt.Sequence);   // ver INTEGRACION_UNITY.md
+        var input  = FeaturePipeline.Prepare(evt.Sequence);   // ver docs/INTEGRACION_UNITY.md
         var result = signClassifier.Classify(input);
         metrics.OnInferenceComplete();              // (3) el clasificador respondió
 
@@ -162,7 +162,7 @@ siempre los dos campos.
 
 ## Comparabilidad con las cifras de Python
 
-`demo_vivo.py` mide la misma métrica con la misma fórmula
+`scripts/demo_vivo.py` mide la misma métrica con la misma fórmula
 (`retardo_segmentacion + tiempo_de_proceso`) y la guarda en
 `outputs/reports/demo_sesion_*.json`. Las dos series son comparables **siempre
 que `restFramesEnd` coincida con `config.REST_FRAMES_FIN`**. Si tienes las dos,

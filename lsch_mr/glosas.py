@@ -1,4 +1,4 @@
-"""Carga del catálogo de glosas (Glosas_LSCh_Mappeadas.csv)."""
+"""Carga del catálogo de glosas (data/catalogos/Glosas_LSCh_Mappeadas.csv)."""
 from __future__ import annotations
 
 import csv

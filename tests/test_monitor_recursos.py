@@ -53,7 +53,7 @@ def test_ultima_muestra_es_none_hasta_la_primera():
 
 
 def test_ultima_muestra_sigue_a_la_mas_reciente():
-    """Lo que lee el overlay de demo_vivo.py tiene que ser el mismo dict que se
+    """Lo que lee el overlay de scripts/demo_vivo.py tiene que ser el mismo dict que se
     guarda en el CSV, no una copia que pueda quedar atrás."""
     reloj = _Reloj()
     lecturas = [(10.0, 100 * 1024 ** 2), (30.0, 150 * 1024 ** 2)]

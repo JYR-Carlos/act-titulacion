@@ -6,7 +6,7 @@ participante interpretó correctamente la secuencia de señas **sin comunicació
 adicional**". Umbral del MVP: ≥ 80% sobre un mínimo de 10 pruebas con
 participantes distintos.
 
-Funciones puras: no leen archivos ni imprimen. El CLI es `calcular_tsr.py`.
+Funciones puras: no leen archivos ni imprimen. El CLI es `scripts/calcular_tsr.py`.
 
 ---------------------------------------------------------------------------
 Por qué se reporta un intervalo de confianza y no solo el porcentaje

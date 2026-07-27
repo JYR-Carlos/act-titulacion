@@ -1,4 +1,4 @@
-"""Tests de las funciones puras de reporte de demo_vivo.py: la parte que
+"""Tests de las funciones puras de reporte de scripts/demo_vivo.py: la parte que
 calcula las métricas de éxito del MVP (Sección 3) a partir del historial de
 señas de una sesión, más la salud de la captura que permite interpretar una
 sesión vacía. No tocan cámara ni entran a `main()`."""

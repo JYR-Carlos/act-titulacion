@@ -3,13 +3,13 @@ HandTrackingProvider — Capa 1 (Captura).
 
 Encapsula el hand tracking con MediaPipe Tasks API (`HandLandmarker`).
 IMPORTANTE: se usa la Tasks API (NO la API legacy `mp.solutions.hands`,
-descontinuada por Google en 2023) — ver CONTEXTO_PROYECTO.md Sección 4.
+descontinuada por Google en 2023) — ver docs/CONTEXTO_PROYECTO.md Sección 4.
 
 En el sistema final este provider se reemplaza por el Meta XR SDK; el contrato
 `getFrame()` se mantiene idéntico (Sección 8.2).
 
 Requiere el modelo `hand_landmarker.task` en `models/` (no viene con
-`pip install mediapipe`). Usa `descargar_modelo.py` para obtenerlo.
+`pip install mediapipe`). Usa `scripts/descargar_modelo.py` para obtenerlo.
 
 ======================================================================
 running_mode OFICIAL DEL PROYECTO: "image"   (decisión del 2026-07-26)
@@ -18,7 +18,7 @@ Vale para Python y para el port a Unity (plugin de homuler). NO es un
 detalle de implementación: es parte del contrato con el modelo.
 
 Por qué: el corpus LSA64 del que salió `modelo.onnx` se extrajo con
-`extraer_lote.py`, que pasa `running_mode="image"`. El modo de servicio
+`scripts/extraer_lote.py`, que pasa `running_mode="image"`. El modo de servicio
 tiene que ser el modo de extracción — si no, el modelo recibe keypoints
 de otra distribución y falla en silencio (train/serve skew).
 
@@ -32,17 +32,17 @@ oficial. Se mantiene solo para no romper llamadas existentes que exploran
 tracking en vivo sin producir datos ni clasificar. Los cuatro usos reales
 del proyecto pasan running_mode="image" explícitamente:
 
-    extraer_lote.py        corpus por lotes (es el que extrajo LSA64)
-    extraer_keypoints.py   corpus desde webcam o archivo
+    scripts/extraer_lote.py        corpus por lotes (es el que extrajo LSA64)
+    scripts/extraer_keypoints.py   corpus desde webcam o archivo
     DatasetRecorder        corpus grabado en sesión
-    demo_vivo.py           demo end-to-end, alimenta modelo.onnx
+    scripts/demo_vivo.py           demo end-to-end, alimenta modelo.onnx
 
 Si añades un uso nuevo que grabe corpus o alimente al modelo, pásalo
 también. No confíes en el default.
 
 Especificación completa, evidencia y qué reabriría la decisión:
-INTEGRACION_UNITY.md sección 7. Vectores de referencia frame a frame:
-`generar_secuencia_dorada.py` -> integracion/secuencia_dorada.json.
+docs/INTEGRACION_UNITY.md sección 7. Vectores de referencia frame a frame:
+`scripts/generar_secuencia_dorada.py` -> integracion/secuencia_dorada.json.
 LIVE_STREAM no se usa nunca (asíncrono: descarta frames).
 """
 from __future__ import annotations
@@ -74,7 +74,7 @@ class HandTrackingProvider:
         if not model_path.exists():
             raise FileNotFoundError(
                 f"No se encontró {model_path}. Descárgalo con:\n"
-                "    python descargar_modelo.py\n"
+                "    python scripts/descargar_modelo.py\n"
                 "o manualmente desde el catálogo de MediaPipe HandLandmarker."
             )
 

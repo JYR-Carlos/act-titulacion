@@ -1,0 +1,134 @@
+{
+  "sesion": {
+    "inicio": "2026-07-27T10:08:25",
+    "duracion_s": 50.64,
+    "fuente": "0",
+    "conf_threshold": 0.9,
+    "modo_manos": "dominante"
+  },
+  "recursos": {
+    "n_muestras": 45,
+    "duracion_s": 50.56,
+    "n_cpus_logicos": 12,
+    "cpu_pct_normalizado": {
+      "media": 12.4,
+      "min": 4.3,
+      "max": 44.6
+    },
+    "memoria_rss_mb": {
+      "media": 537.9,
+      "min": 512.4,
+      "max": 539.4
+    }
+  },
+  "captura": {
+    "fps_promedio_camara": 30.9,
+    "n_frames": 1080,
+    "n_frames_con_mano": 656,
+    "tasa_deteccion_mano": 0.607,
+    "luminancia_media": 130.0,
+    "umbral_luminancia": 60.0,
+    "escena_oscura": false,
+    "realce_poca_luz": false
+  },
+  "latencia_e2e_ms": {
+    "umbral_ms": 500.0,
+    "n": 7,
+    "media_ms": 317.67,
+    "min_ms": 259.29,
+    "max_ms": 334.02,
+    "p95_ms": 333.7,
+    "n_excede_umbral": 0,
+    "pct_excede_umbral": 0.0
+  },
+  "reconocimiento": {
+    "n_clasificadas": 7,
+    "n_en_vocabulario": 5,
+    "n_fuera_vocabulario": 2,
+    "n_descartadas_tracking": 7,
+    "conteo_por_glosa": {
+      "Dar": 2,
+      "Aceptar": 1,
+      "Ayuda": 2
+    }
+  },
+  "historial_senas": [
+    {
+      "t_s": 14.45,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.7707,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 2.64,
+      "retardo_segmentacion_ms": 281.38,
+      "latencia_e2e_ms": 319.96,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 21.3,
+      "label": "Give",
+      "label_es": "Dar",
+      "conf": 0.9985,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.61,
+      "retardo_segmentacion_ms": 284.48,
+      "latencia_e2e_ms": 319.95,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 31.64,
+      "label": "Give",
+      "label_es": "Dar",
+      "conf": 0.9027,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.46,
+      "retardo_segmentacion_ms": 297.31,
+      "latencia_e2e_ms": 330.87,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 39.44,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.987,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.67,
+      "retardo_segmentacion_ms": 291.1,
+      "latencia_e2e_ms": 326.66,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 41.42,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.5848,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 0.9,
+      "retardo_segmentacion_ms": 297.72,
+      "latencia_e2e_ms": 334.02,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 44.69,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 1.0,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.28,
+      "retardo_segmentacion_ms": 297.31,
+      "latencia_e2e_ms": 332.95,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 47.44,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 1.0,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.05,
+      "retardo_segmentacion_ms": 232.76,
+      "latencia_e2e_ms": 259.29,
+      "excede_umbral": false
+    }
+  ]
+}

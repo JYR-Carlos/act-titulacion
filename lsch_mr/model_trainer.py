@@ -1,5 +1,5 @@
 """
-ModelTrainer — Pipeline offline (CONTEXTO_PROYECTO.md Sección 10.2 / CU-02).
+ModelTrainer — Pipeline offline (docs/CONTEXTO_PROYECTO.md Sección 10.2 / CU-02).
 
 Entrena el TCN sobre el dataset normalizado y produce:
   * accuracy (train/val)
@@ -75,7 +75,7 @@ class CVMetrics:
                 # Primero, para que se vea al abrir el archivo: sin saber de qué
                 # corrida salió, una cifra con ±0.01 de ruido no es rastreable.
                 "corrida": self.corrida,
-                # Se guardan para que el JSON se baste solo: `evaluar_modelo.py
+                # Se guardan para que el JSON se baste solo: `scripts/evaluar_modelo.py
                 # --fuente cv` reconstruye el reporte sin tener que adivinar el
                 # orden de las clases desde labels.json (que puede haber sido
                 # sobrescrito por un entrenamiento posterior con otro corpus).
@@ -284,7 +284,7 @@ class ModelTrainer:
 
         pista = ("Revisa el número de campo: en LSA64 (017_001_001 = "
                  "clase_senante_repeticion) el señante es el campo 2; en un corpus "
-                 "de grabar_corpus.py (s01_0001) es el campo 1.")
+                 "de scripts/grabar_corpus.py (s01_0001) es el campo 1.")
 
         if perfil["n_grupos"] < 2:
             raise SystemExit(
@@ -460,7 +460,7 @@ class ModelTrainer:
                       seed: int = config.SEMILLA) -> tuple[np.ndarray, np.ndarray]:
         """Índices `(entrenamiento, validación)` del split 80/20 de `train()`.
 
-        Existe para que **`train()` y `evaluar_modelo.py` usen literalmente el
+        Existe para que **`train()` y `scripts/evaluar_modelo.py` usen literalmente el
         mismo reparto**. El script de evaluación tiene que medir el modelo
         exportado sobre las muestras que ese modelo no vio; si reconstruyera el
         split por su cuenta y algún parámetro se desincronizara (la semilla, el
@@ -531,7 +531,7 @@ class ModelTrainer:
         y = np.asarray(y, dtype="int64")
         n_classes = len(classes)
 
-        # El reparto vive en `split_indices` para que `evaluar_modelo.py` pueda
+        # El reparto vive en `split_indices` para que `scripts/evaluar_modelo.py` pueda
         # reproducir EXACTAMENTE este 20% de validación (ver su docstring).
         idx_tr, idx_va = self.split_indices(y, n_classes, self.val_split, self.seed)
         Xtr, Xva = X[idx_tr], X[idx_va]
@@ -712,7 +712,7 @@ class ModelTrainer:
         # Antes el sufijo solo distinguía el esquema, así que la corrida de
         # `ambas` sobrescribía la de `dominante` y había que renombrar los JSON a
         # mano. Eso es lo que dejó cifras huérfanas en el informe: la tabla de
-        # ESTADO_ACTUAL.md citaba un 0.903 cuyo JSON ya no existía en disco.
+        # docs/ESTADO_ACTUAL.md citaba un 0.903 cuyo JSON ya no existía en disco.
         # Con el modo en el nombre, cada corrida tiene su archivo por
         # construcción y la tabla siempre se puede rastrear hasta él.
         partes = [p for p in (etiqueta.strip(),

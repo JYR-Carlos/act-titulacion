@@ -68,7 +68,7 @@ def _proyectar(pts3d: np.ndarray, distancia_cm: float,
     Devuelve (21, 3) con `x`, `y` normalizadas en el plano imagen y `z` como
     profundidad relativa a la muñeca en una escala comparable a la de `x` — que
     es la convención que documenta MediaPipe y la que asume el resto del
-    pipeline (ver la trampa 2 de INTEGRACION_UNITY.md).
+    pipeline (ver la trampa 2 de docs/INTEGRACION_UNITY.md).
     """
     d = distancia_cm / 100.0
     z_camara = pts3d[:, 2] + d                      # profundidad real por punto

@@ -1,5 +1,5 @@
 """
-Tipos de datos del pipeline (modelo de datos, CONTEXTO_PROYECTO.md Sección 6).
+Tipos de datos del pipeline (modelo de datos, docs/CONTEXTO_PROYECTO.md Sección 6).
 
 Se representan las coordenadas con `numpy.ndarray` por eficiencia; las clases
 `dataclass` envuelven los conceptos del diseño (Frame, SignEvent, ClassResult)

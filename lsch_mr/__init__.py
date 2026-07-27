@@ -2,7 +2,7 @@
 Paquete LSCh-MR — pipeline de IA / datos (parte de Juan Yampara).
 
 Reúne los componentes runtime y offline definidos en el diseño
-(CONTEXTO_PROYECTO.md, Sección 10.2). Los nombres de clases y métodos clave
+(docs/CONTEXTO_PROYECTO.md, Sección 10.2). Los nombres de clases y métodos clave
 respetan el diagrama de clases para mantener la trazabilidad diseño↔código.
 """
 from __future__ import annotations

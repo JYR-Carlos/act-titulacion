@@ -3,7 +3,7 @@ Configuración central del pipeline LSCh-MR (parte de IA / datos).
 
 Concentra rutas, constantes del modelo de datos e hiperparámetros compartidos
 para que todos los componentes y scripts usen exactamente los mismos valores.
-Ver `CONTEXTO_PROYECTO.md` (Secciones 6 y 3) para la trazabilidad diseño↔código.
+Ver `docs/CONTEXTO_PROYECTO.md` (Secciones 6 y 3) para la trazabilidad diseño↔código.
 """
 from __future__ import annotations
 
@@ -17,6 +17,8 @@ RAIZ = Path(__file__).resolve().parent.parent
 MODELS_DIR = RAIZ / "models"                 # aquí va hand_landmarker.task
 DATA_RAW_DIR = RAIZ / "data" / "raw"         # CSV crudos (keypoints sin normalizar)
 DATA_PROCESSED_DIR = RAIZ / "data" / "processed"  # dataset normalizado (.npz)
+DATA_CATALOGOS_DIR = RAIZ / "data" / "catalogos"  # CSV de referencia versionados
+DATA_TSR_DIR = RAIZ / "data" / "tsr"         # planillas de las pruebas con usuarios
 OUTPUTS_MODELS_DIR = RAIZ / "outputs" / "models"   # .keras + .onnx
 OUTPUTS_REPORTS_DIR = RAIZ / "outputs" / "reports"  # matriz de confusión, métricas
 
@@ -24,14 +26,14 @@ OUTPUTS_REPORTS_DIR = RAIZ / "outputs" / "reports"  # matriz de confusión, mét
 HAND_LANDMARKER_TASK = MODELS_DIR / "hand_landmarker.task"
 
 # Catálogo de glosas (las 10 señas del corpus cerrado)
-GLOSAS_CSV = RAIZ / "Glosas_LSCh_Mappeadas.csv"
+GLOSAS_CSV = DATA_CATALOGOS_DIR / "Glosas_LSCh_Mappeadas.csv"
 
 for _d in (MODELS_DIR, DATA_RAW_DIR, DATA_PROCESSED_DIR,
            OUTPUTS_MODELS_DIR, OUTPUTS_REPORTS_DIR):
     _d.mkdir(parents=True, exist_ok=True)
 
 # --------------------------------------------------------------------------- #
-# Modelo de datos (CONTEXTO_PROYECTO.md, Sección 6)
+# Modelo de datos (docs/CONTEXTO_PROYECTO.md, Sección 6)
 # --------------------------------------------------------------------------- #
 NUM_LANDMARKS = 21          # keypoints por mano (estándar MediaPipe / Meta XR SDK)
 NUM_EJES = 3                # (x, y, z)
@@ -70,7 +72,7 @@ REST_FRAMES_FIN = 6             # frames de reposo sostenido para cerrar la señ
 REST_MIN_FRAMES_SENA = 5        # secuencias más cortas se descartan como ruido
 
 # Frames SIN mano detectada tolerados antes de dar la mano por perdida.
-# running_mode="image" (el oficial, ver INTEGRACION_UNITY.md sección 7) redetecta
+# running_mode="image" (el oficial, ver docs/INTEGRACION_UNITY.md sección 7) redetecta
 # la palma en cada frame sin arrastrar ROI del frame anterior, así que un
 # parpadeo de 1-2 frames (motion blur, ángulo, borde del cuadro) es variación
 # normal, no que la mano se haya ido de verdad.
@@ -114,7 +116,7 @@ REST_FRAMES_PERDIDA_MAX = 3
 # (temperature scaling u otra calibración) queda como trabajo futuro, y cambiaría
 # el contrato con Unity porque hoy el softmax va dentro del grafo ONNX.
 #
-# Recalcular tras reentrenar:  python evaluar_modelo.py --fuente cv
+# Recalcular tras reentrenar:  python scripts/evaluar_modelo.py --fuente cv
 CONF_THRESHOLD = 0.90
 
 # --------------------------------------------------------------------------- #
@@ -131,7 +133,7 @@ CORPUS_MIN_MUESTRAS_POR_CLASE = 50
 
 # Identificador del señante en una sesión de grabación. Va como primer campo del
 # `sample_id`, que es lo que permite evaluar dejando señantes fuera
-# (`entrenar.py --cv-grupos 1`). No se puede reconstruir después de grabar.
+# (`scripts/entrenar.py --cv-grupos 1`). No se puede reconstruir después de grabar.
 SENANTE_POR_DEFECTO = "s01"
 
 # Accuracy mínima de clasificación para dar el MVP por cumplido (Sección 11).

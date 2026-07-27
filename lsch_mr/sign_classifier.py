@@ -28,7 +28,7 @@ class SignClassifier:
     """Clasifica una SignSequence con el ONNX exportado (Sección 10.2).
 
     Es el equivalente Python de lo que hará Sentis en Unity, y por eso su
-    comportamiento es parte del contrato de `INTEGRACION_UNITY.md`:
+    comportamiento es parte del contrato de `docs/INTEGRACION_UNITY.md`:
 
       * la entrada se remuestrea a `seq_len` y se ensambla según `modo_manos`,
         ambos leídos de `labels.json` y no de constantes;
@@ -49,7 +49,7 @@ class SignClassifier:
         if not onnx_path.exists():
             raise FileNotFoundError(
                 f"No existe {onnx_path}. Exporta el modelo primero "
-                "(python exportar_onnx.py).")
+                "(python scripts/exportar_onnx.py).")
 
         self.conf_threshold = conf_threshold
         meta = self._cargar_labels(Path(labels_path))

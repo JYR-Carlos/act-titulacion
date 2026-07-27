@@ -2,12 +2,12 @@
 # Datos: NO versionados
 # --------------------------------------------------------------------------- #
 # El corpus LSA64 se descarga de su fuente original (ver NOTICE.md) y los CSV de
-# keypoints se regeneran con extraer_lote.py. Pesan cientos de MB y su licencia
+# keypoints se regeneran con scripts/extraer_lote.py. Pesan cientos de MB y su licencia
 # es CC BY-NC-SA 4.0: redistribuirlos aquí sería otra cosa que citarlos.
 data/external/
 data/raw/
 
-# Modelo de MediaPipe: lo descarga descargar_modelo.py, no se redistribuye.
+# Modelo de MediaPipe: lo descarga scripts/descargar_modelo.py, no se redistribuye.
 *.task
 
 # --------------------------------------------------------------------------- #
@@ -24,15 +24,15 @@ data/processed/*.npz
 # Artefactos: se versiona lo que hace el repo utilizable desde un clone
 # --------------------------------------------------------------------------- #
 # modelo.onnx + labels.json son el punto de acoplamiento con Unity
-# (INTEGRACION_UNITY.md) y lo que permite correr la demo sin reentrenar.
-# El .keras es un intermedio: se regenera con entrenar.py.
+# (docs/INTEGRACION_UNITY.md) y lo que permite correr la demo sin reentrenar.
+# El .keras es un intermedio: se regenera con scripts/entrenar.py.
 outputs/models/*
 !outputs/models/modelo.onnx
 !outputs/models/labels.json
 
 # Los .json de reportes son la evidencia en disco de las cifras del informe:
 # sin ellos las métricas no son verificables. Las matrices .png y .csv se
-# regeneran desde esos mismos .json con `evaluar_modelo.py --fuente cv`, sin
+# regeneran desde esos mismos .json con `scripts/evaluar_modelo.py --fuente cv`, sin
 # reentrenar, así que no hace falta versionar binarios.
 outputs/reports/*
 !outputs/reports/*.json
@@ -50,5 +50,5 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 
-# Volcado del repo generado por harness/assembler_repo.py (se regenera).
+# Volcado del repo generado por tools/assembler_repo.py (se regenera).
 codigo_repo.txt

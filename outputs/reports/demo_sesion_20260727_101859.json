@@ -1,0 +1,277 @@
+{
+  "sesion": {
+    "inicio": "2026-07-27T10:17:25",
+    "duracion_s": 94.64,
+    "fuente": "0",
+    "conf_threshold": 0.9,
+    "modo_manos": "dominante"
+  },
+  "recursos": {
+    "n_muestras": 89,
+    "duracion_s": 94.62,
+    "n_cpus_logicos": 12,
+    "cpu_pct_normalizado": {
+      "media": 15.1,
+      "min": 4.2,
+      "max": 45.3
+    },
+    "memoria_rss_mb": {
+      "media": 540.0,
+      "min": 511.3,
+      "max": 544.7
+    }
+  },
+  "captura": {
+    "fps_promedio_camara": 29.4,
+    "n_frames": 1939,
+    "n_frames_con_mano": 1507,
+    "tasa_deteccion_mano": 0.777,
+    "luminancia_media": 132.9,
+    "umbral_luminancia": 60.0,
+    "escena_oscura": false,
+    "realce_poca_luz": false
+  },
+  "latencia_e2e_ms": {
+    "umbral_ms": 500.0,
+    "n": 20,
+    "media_ms": 325.15,
+    "min_ms": 306.7,
+    "max_ms": 335.71,
+    "p95_ms": 335.15,
+    "n_excede_umbral": 0,
+    "pct_excede_umbral": 0.0
+  },
+  "reconocimiento": {
+    "n_clasificadas": 20,
+    "n_en_vocabulario": 5,
+    "n_fuera_vocabulario": 15,
+    "n_descartadas_tracking": 21,
+    "conteo_por_glosa": {
+      "Ayuda": 3,
+      "Aceptar": 1,
+      "Apellido": 1
+    }
+  },
+  "historial_senas": [
+    {
+      "t_s": 19.19,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.6641,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 2.89,
+      "retardo_segmentacion_ms": 274.97,
+      "latencia_e2e_ms": 308.44,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 22.72,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.7499,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.71,
+      "retardo_segmentacion_ms": 271.66,
+      "latencia_e2e_ms": 306.7,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 25.89,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.2078,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.11,
+      "retardo_segmentacion_ms": 287.79,
+      "latencia_e2e_ms": 320.18,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 29.11,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.5124,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.06,
+      "retardo_segmentacion_ms": 287.79,
+      "latencia_e2e_ms": 321.31,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 31.69,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8688,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.97,
+      "retardo_segmentacion_ms": 297.52,
+      "latencia_e2e_ms": 335.12,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 34.25,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.4074,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.05,
+      "retardo_segmentacion_ms": 294.0,
+      "latencia_e2e_ms": 329.05,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 38.78,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.5442,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.29,
+      "retardo_segmentacion_ms": 287.59,
+      "latencia_e2e_ms": 321.18,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 41.62,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.6412,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.12,
+      "retardo_segmentacion_ms": 297.31,
+      "latencia_e2e_ms": 331.38,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 44.11,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.7916,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 2.59,
+      "retardo_segmentacion_ms": 297.52,
+      "latencia_e2e_ms": 335.71,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 46.78,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8058,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.6,
+      "retardo_segmentacion_ms": 291.1,
+      "latencia_e2e_ms": 327.61,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 49.7,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8542,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.45,
+      "retardo_segmentacion_ms": 294.21,
+      "latencia_e2e_ms": 332.78,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 52.41,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.6721,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.28,
+      "retardo_segmentacion_ms": 287.59,
+      "latencia_e2e_ms": 321.05,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 55.11,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.6815,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.43,
+      "retardo_segmentacion_ms": 297.1,
+      "latencia_e2e_ms": 329.55,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 58.47,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8657,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.35,
+      "retardo_segmentacion_ms": 294.0,
+      "latencia_e2e_ms": 326.37,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 61.44,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 0.9591,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.48,
+      "retardo_segmentacion_ms": 297.52,
+      "latencia_e2e_ms": 333.23,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 74.12,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 0.9317,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.06,
+      "retardo_segmentacion_ms": 281.17,
+      "latencia_e2e_ms": 317.53,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 78.16,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9998,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.22,
+      "retardo_segmentacion_ms": 297.31,
+      "latencia_e2e_ms": 330.34,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 81.3,
+      "label": "Last_name",
+      "label_es": "Apellido",
+      "conf": 0.999,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.17,
+      "retardo_segmentacion_ms": 297.72,
+      "latencia_e2e_ms": 333.17,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 85.75,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 0.9968,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.54,
+      "retardo_segmentacion_ms": 294.21,
+      "latencia_e2e_ms": 328.89,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 90.98,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.7036,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.25,
+      "retardo_segmentacion_ms": 274.76,
+      "latencia_e2e_ms": 313.36,
+      "excede_umbral": false
+    }
+  ]
+}

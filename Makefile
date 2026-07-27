@@ -19,7 +19,7 @@ ayuda:
 setup: deps modelo test
 	@echo ""
 	@echo "ENTORNO LISTO."
-	@echo "  Corre la demo:  $(PY) demo_vivo.py --fuente 0"
+	@echo "  Corre la demo:  $(PY) scripts/demo_vivo.py --fuente 0"
 	@echo "  El modelo entrenado ya viene en el repo: no hace falta reentrenar."
 
 venv:
@@ -32,16 +32,16 @@ deps: venv
 # No aborta el setup: el pipeline offline funciona sin el .task, solo la
 # captura lo necesita.
 modelo: venv
-	-$(PY) descargar_modelo.py
+	-$(PY) scripts/descargar_modelo.py
 
 test: venv
 	$(PY) -m pytest -q
 
 demo: venv
-	$(PY) demo_vivo.py --fuente 0
+	$(PY) scripts/demo_vivo.py --fuente 0
 
 metricas: venv
-	$(PY) reproducir_metricas.py --dataset-dominante $(DATASET)
+	$(PY) scripts/reproducir_metricas.py --dataset-dominante $(DATASET)
 
 limpiar:
 	rm -rf $(VENV) .pytest_cache

@@ -2,7 +2,7 @@
 MonitorRecursos — instrumentación de uso de recursos (fuera del diagrama de
 clases del diseño).
 
-El diseño fija cuatro métricas objetivo del MVP (CONTEXTO_PROYECTO.md Sección
+El diseño fija cuatro métricas objetivo del MVP (docs/CONTEXTO_PROYECTO.md Sección
 3: accuracy, latencia end-to-end, FPS de renderizado, task success rate).
 Ninguna es "uso de CPU/memoria": no hay un umbral de aprobación definido para
 recursos. Este módulo no lo inventa — solo muestrea y deja constancia
@@ -11,7 +11,7 @@ estructurada (JSON + CSV) para que el dato exista cuando haya que presentarlo
 
 `lector` y `reloj` son inyectables (mismo patrón que `MessageComposer`) para
 poder testear sin depender de psutil ni de tiempo real; `para_proceso_actual`
-es la fábrica que sí usa psutil, pensada para demo_vivo.py.
+es la fábrica que sí usa psutil, pensada para scripts/demo_vivo.py.
 """
 from __future__ import annotations
 
@@ -98,7 +98,7 @@ class MonitorRecursos:
     def ultima_muestra(self) -> Optional[dict]:
         """La muestra más reciente, o None si todavía no se tomó ninguna.
 
-        Pensada para el overlay de demo_vivo.py, que la lee una vez por frame:
+        Pensada para el overlay de scripts/demo_vivo.py, que la lee una vez por frame:
         a diferencia de `muestras` no copia la lista (que crece toda la
         sesión). Devuelve el mismo dict que va al CSV y al reporte, así que lo
         que se ve en pantalla no puede diverger de la evidencia guardada.

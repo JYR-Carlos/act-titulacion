@@ -78,7 +78,7 @@ La Capa 1 usa `HandLandmarker` de **MediaPipe Tasks** (Google), bajo
 **Apache License 2.0**.
 
 El archivo de pesos `models/hand_landmarker.task` **no se redistribuye aquí**:
-lo descarga `descargar_modelo.py` desde el catálogo oficial de MediaPipe, y
+lo descarga `scripts/descargar_modelo.py` desde el catálogo oficial de MediaPipe, y
 `.gitignore` lo excluye.
 
 - MediaPipe: <https://github.com/google-ai-edge/mediapipe>

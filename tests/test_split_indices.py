@@ -1,6 +1,6 @@
 """Tests de ModelTrainer.split_indices: el reparto 80/20 del modelo final.
 
-Importa porque `evaluar_modelo.py --fuente modelo` se apoya en que este helper
+Importa porque `scripts/evaluar_modelo.py --fuente modelo` se apoya en que este helper
 reproduce EXACTAMENTE el split que usó `train()`. Si los dos divergieran, el
 script evaluaría el modelo sobre muestras con las que se entrenó y devolvería una
 accuracy inflada sin dar ningún error — el mismo tipo de fallo silencioso que el

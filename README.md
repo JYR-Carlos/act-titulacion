@@ -38,7 +38,7 @@ la Sección 3 del diseño prohíbe MQTT/gRPC/REST:
 
 La especificación completa del port —fórmulas, código C# de referencia,
 trampas conocidas y el `running_mode` obligatorio— está en
-**[`INTEGRACION_UNITY.md`](INTEGRACION_UNITY.md)**. Ese documento y los vectores
+**[`docs/INTEGRACION_UNITY.md`](docs/INTEGRACION_UNITY.md)**. Ese documento y los vectores
 dorados son todo lo que hace falta de este lado: no hay que leer el código
 Python para portar la Capa 2 correctamente.
 
@@ -46,7 +46,7 @@ Python para portar la Capa 2 correctamente.
 > **ONNX vía Unity Sentis**, captura con **MediaPipe Tasks `HandLandmarker`** en
 > `running_mode=IMAGE`, **21 keypoints** por mano, **NormVector de 63 dim**
 > (centrado en L0 + escala por ‖L9−L0‖), preprocesamiento propio
-> ([`DECISION_PREPROCESAMIENTO.md`](DECISION_PREPROCESAMIENTO.md)), modo de manos
+> ([`docs/DECISION_PREPROCESAMIENTO.md`](docs/DECISION_PREPROCESAMIENTO.md)), modo de manos
 > `dominante`.
 
 ---
@@ -82,7 +82,7 @@ corre la batería de pruebas. Termina diciendo si el entorno quedó listo.
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-python descargar_modelo.py     # baja models/hand_landmarker.task
+python scripts/descargar_modelo.py     # baja models/hand_landmarker.task
 python -m pytest -q
 ```
 
@@ -104,7 +104,7 @@ nada** para ver el sistema funcionando:
 git clone https://github.com/JYR-Carlos/act-titulacion.git
 cd act-titulacion
 .\setup.ps1
-python demo_vivo.py --fuente 0
+python scripts/demo_vivo.py --fuente 0
 ```
 
 Haz una seña frente a la cámara y vuelve a reposo: la secuencia se cierra sola
@@ -114,7 +114,7 @@ latencia end-to-end contra el umbral de 500 ms. `r` reinicia el mensaje, `q` o
 
 Las 10 señas que el modelo conoce, con vídeo de referencia para comprobar si
 las estás haciendo bien, están en
-**[`GLOSARIO_SENAS_MODELO.md`](GLOSARIO_SENAS_MODELO.md)**. Son señas
+**[`docs/GLOSARIO_SENAS_MODELO.md`](docs/GLOSARIO_SENAS_MODELO.md)**. Son señas
 **argentinas** (LSA64), no chilenas — ver [Limitaciones](#limitaciones-declaradas).
 
 Al salir, la demo deja `outputs/reports/demo_sesion_<fecha>.json` con la
@@ -123,11 +123,11 @@ distribución de latencia, la tasa de detección de mano y el uso de CPU/memoria
 **Si no reconoce nada**, casi siempre es luz:
 
 ```powershell
-python diagnostico_captura.py --etiqueta noche   # 20 s de medición
-python demo_vivo.py --realce                     # realce adaptativo de contraste
+python scripts/diagnostico_captura.py --etiqueta noche   # 20 s de medición
+python scripts/demo_vivo.py --realce                     # realce adaptativo de contraste
 ```
 
-`diagnostico_captura.py` separa las dos causas que dan el mismo síntoma: la
+`scripts/diagnostico_captura.py` separa las dos causas que dan el mismo síntoma: la
 escena (poca luz, exposición larga, motion blur) y el throughput del pipeline.
 Más luz física siempre gana; el realce es la red de seguridad.
 
@@ -135,7 +135,7 @@ También puedes usar el teléfono como cámara: `--fuente` acepta una URL ademá
 de un índice.
 
 ```powershell
-python demo_vivo.py --fuente http://192.168.1.42:8080/video
+python scripts/demo_vivo.py --fuente http://192.168.1.42:8080/video
 ```
 
 ---
@@ -153,29 +153,29 @@ redistribuirlo). Descárgalo de su fuente original:
 <https://facundoq.github.io/datasets/lsa64/>
 
 Descomprime los vídeos en `data/external/lsa64/videos/`. El repo incluye
-`lsa64_10_annotations.csv`, que mapea las 500 muestras de las 10 señas usadas a
-su etiqueta — sin él, `extraer_lote.py` tomaría el nombre de archivo como
+`data/catalogos/lsa64_10_annotations.csv`, que mapea las 500 muestras de las 10 señas usadas a
+su etiqueta — sin él, `scripts/extraer_lote.py` tomaría el nombre de archivo como
 etiqueta y saldrían 500 clases de una muestra cada una.
 
 ### 2. Extraer keypoints con nuestra propia Capa 1
 
 ```powershell
-python extraer_lote.py `
+python scripts/extraer_lote.py `
     --videos-dir data/external/lsa64/videos `
-    --anotaciones lsa64_10_annotations.csv `
+    --anotaciones data/catalogos/lsa64_10_annotations.csv `
     --salida data/raw/lsa64_10.csv
 ```
 
 Corre `HandLandmarker` en `running_mode=IMAGE` sobre cada vídeo. Es el paso
 lento: ~500 vídeos. Se usan los *vídeos* de LSA64, nunca keypoints de terceros,
-que es lo que mantiene intacta `DECISION_PREPROCESAMIENTO.md`.
+que es lo que mantiene intacta `docs/DECISION_PREPROCESAMIENTO.md`.
 
 ### 3. Construir el dataset normalizado
 
 ```powershell
-python build_dataset.py --entrada data/raw/lsa64_10.csv --modo dominante `
+python scripts/build_dataset.py --entrada data/raw/lsa64_10.csv --modo dominante `
     --salida data/processed/lsa64_dominante.npz
-python build_dataset.py --entrada data/raw/lsa64_10.csv --modo ambas `
+python scripts/build_dataset.py --entrada data/raw/lsa64_10.csv --modo ambas `
     --salida data/processed/lsa64_ambas.npz
 ```
 
@@ -186,11 +186,11 @@ Avisa si alguna glosa no llega al mínimo de muestras del diseño
 ### 4. Entrenar y exportar
 
 ```powershell
-python entrenar.py --dataset data/processed/lsa64_dominante.npz
-python exportar_onnx.py
+python scripts/entrenar.py --dataset data/processed/lsa64_dominante.npz
+python scripts/exportar_onnx.py
 ```
 
-`exportar_onnx.py` valida que todos los operadores del grafo estén soportados
+`scripts/exportar_onnx.py` valida que todos los operadores del grafo estén soportados
 por Sentis antes de dar la exportación por buena.
 
 > **Al reentrenar, `integracion/vectores_dorados.json` queda invalidado** en su
@@ -198,8 +198,8 @@ por Sentis antes de dar la exportación por buena.
 > al equipo de Unity:
 >
 > ```powershell
-> python generar_vectores_dorados.py
-> python generar_secuencia_dorada.py
+> python scripts/generar_vectores_dorados.py
+> python scripts/generar_secuencia_dorada.py
 > ```
 
 ---
@@ -207,11 +207,11 @@ por Sentis antes de dar la exportación por buena.
 ## Reproducir las métricas del informe
 
 ```powershell
-python reproducir_metricas.py
+python scripts/reproducir_metricas.py
 ```
 
 Ejecuta las cuatro evaluaciones de validación cruzada (2 modos × 2 esquemas)
-más `evaluar_modelo.py`, y escribe las tablas exactas que aparecen en el
+más `scripts/evaluar_modelo.py`, y escribe las tablas exactas que aparecen en el
 informe. Las cuatro se lanzan juntas para que la tabla y los JSON sean
 consistentes por construcción.
 
@@ -222,22 +222,22 @@ están en `outputs/reports/` sin reentrenar nada.
 Los comandos individuales, por si prefieres lanzarlos por separado:
 
 ```powershell
-python entrenar.py --dataset data/processed/lsa64_dominante.npz --cv --solo-cv
-python entrenar.py --dataset data/processed/lsa64_dominante.npz --cv-grupos 2 --solo-cv
-python entrenar.py --dataset data/processed/lsa64_ambas.npz --cv --solo-cv
-python entrenar.py --dataset data/processed/lsa64_ambas.npz --cv-grupos 2 --solo-cv
-python evaluar_modelo.py --fuente cv
+python scripts/entrenar.py --dataset data/processed/lsa64_dominante.npz --cv --solo-cv
+python scripts/entrenar.py --dataset data/processed/lsa64_dominante.npz --cv-grupos 2 --solo-cv
+python scripts/entrenar.py --dataset data/processed/lsa64_ambas.npz --cv --solo-cv
+python scripts/entrenar.py --dataset data/processed/lsa64_ambas.npz --cv-grupos 2 --solo-cv
+python scripts/evaluar_modelo.py --fuente cv
 ```
 
 > **`--cv-grupos 2` significa "el señante es el 2.º campo del `sample_id`"**
 > (`017_001_001` = clase_señante_repetición). Pasar el número equivocado
 > **agrupaba mal en silencio** e inflaba la métrica; ahora el comando imprime
 > siempre cuántos grupos detectó y aborta si el agrupamiento es implausible. En
-> un corpus grabado con `grabar_corpus.py --senante s01` el señante es el
+> un corpus grabado con `scripts/grabar_corpus.py --senante s01` el señante es el
 > campo **1**.
 
 Qué comando produce cada cifra del informe y qué hay que declarar al
-reportarla: **[`METRICAS_MVP.md`](METRICAS_MVP.md)**.
+reportarla: **[`docs/METRICAS_MVP.md`](docs/METRICAS_MVP.md)**.
 
 ---
 
@@ -344,8 +344,8 @@ si sale corta: bajar `REST_FRAMES_FIN` de 6 a 4, a costa de cerrar las señas
 antes.
 
 Estado de las cuatro métricas del MVP y qué falta para cerrar cada una:
-**[`METRICAS_MVP.md`](METRICAS_MVP.md)** y
-**[`ESTADO_ACTUAL.md`](ESTADO_ACTUAL.md)**.
+**[`docs/METRICAS_MVP.md`](docs/METRICAS_MVP.md)** y
+**[`docs/ESTADO_ACTUAL.md`](docs/ESTADO_ACTUAL.md)**.
 
 ---
 
@@ -358,7 +358,7 @@ reportar cualquier cifra de este repo.
 **LSA64 (lengua de señas argentina)**. El equipo no tuvo acceso a señantes de
 LSCh, así que grabar corpus propio quedó descartado. El vocabulario demostrado
 son 10 señas de LSA64 (`Thanks`, `Help`, `Name`, …), no las glosas de
-`Glosas_LSCh_Mappeadas.csv`, que siguen siendo el vocabulario *objetivo de
+`data/catalogos/Glosas_LSCh_Mappeadas.csv`, que siguen siendo el vocabulario *objetivo de
 diseño*. **La generalización a LSCh no está probada** y es trabajo futuro. Son
 idiomas distintos: no hay garantía de que la seña argentina de "gracias" se
 parezca a la chilena.
@@ -391,7 +391,7 @@ centrado en el cuadro.
 refresco del Quest 3, que quedó fuera del camino crítico; en un PC con VSync el
 FPS se clava en el refresco del monitor y compararlo con 72 no significa nada.
 El task success rate necesita ejecutar las sesiones con participantes: el guion,
-la planilla y el cálculo ya están en `protocolo/` y `calcular_tsr.py`.
+la planilla y el cálculo ya están en `data/tsr/` y `scripts/calcular_tsr.py`.
 
 ---
 
@@ -459,8 +459,8 @@ excluiría con `-m "not camera"`.
 Además, dos comprobaciones que no son pytest pero valen lo mismo:
 
 ```powershell
-python generar_vectores_dorados.py --verificar   # el preprocesamiento no cambió
-python generar_secuencia_dorada.py --verificar   # re-extrae el vídeo y compara
+python scripts/generar_vectores_dorados.py --verificar   # el preprocesamiento no cambió
+python scripts/generar_secuencia_dorada.py --verificar   # re-extrae el vídeo y compara
 ```
 
 Si cualquiera de las dos falla, el port a C# queda invalidado y hay que avisar
@@ -468,41 +468,71 @@ al equipo de Unity.
 
 ---
 
+## Estructura del repositorio
+
+```
+lsch_mr/        el paquete: los componentes del diseño (Capas 1-3)
+scripts/        los CLI, uno por tarea. Se ejecutan desde la raíz:
+                  python scripts/demo_vivo.py --fuente 0
+tests/          pruebas unitarias (pytest)
+docs/           diseño, arquitectura, métricas y contrato con Unity
+data/
+  catalogos/    CSV de referencia versionados (glosas, anotaciones LSA64)
+  external/     corpus descargado (LSA64) — no versionado
+  raw/          keypoints crudos extraídos del corpus — no versionado
+  processed/    datasets normalizados .npz (los dos del informe, versionados)
+  tsr/          planilla de las pruebas con usuarios (métrica 4)
+models/         hand_landmarker.task de MediaPipe — lo baja descargar_modelo.py
+outputs/
+  models/       modelo.onnx + labels.json (versionados: es lo que consume Unity)
+  reports/      métricas y evidencia de cada corrida
+integracion/    lo que viaja al repo de Unity: vectores dorados y código C#
+tools/          utilidades de desarrollo ajenas al pipeline
+```
+
+Los scripts se ejecutan **desde la raíz del repositorio**. Cada uno importa
+`scripts/_raiz.py`, que deja la raíz en `sys.path` para que `import lsch_mr`
+funcione sin instalar el paquete.
+
+---
+
 ## Documentación del repositorio
 
 | Documento | Para qué |
 |---|---|
-| [`INTEGRACION_UNITY.md`](INTEGRACION_UNITY.md) | Contrato entre repos y spec del port del preprocesamiento a C#. **Léelo antes de tocar Unity.** |
-| [`METRICAS_MVP.md`](METRICAS_MVP.md) | Qué comando produce cada cifra del informe y qué declarar al reportarla. |
-| [`ESTADO_ACTUAL.md`](ESTADO_ACTUAL.md) | Fotografía del repo: qué está hecho, qué falta y por qué. |
-| [`GLOSARIO_SENAS_MODELO.md`](GLOSARIO_SENAS_MODELO.md) | Las 10 glosas del modelo, su significado y un vídeo de referencia. |
-| [`DECISION_PREPROCESAMIENTO.md`](DECISION_PREPROCESAMIENTO.md) | Por qué el preprocesamiento es propio y no reutilizado. |
-| [`CONTEXTO_PROYECTO.md`](CONTEXTO_PROYECTO.md) | El diseño: casos de uso, secciones y modelo de datos. |
+| [`docs/INTEGRACION_UNITY.md`](docs/INTEGRACION_UNITY.md) | Contrato entre repos y spec del port del preprocesamiento a C#. **Léelo antes de tocar Unity.** |
+| [`docs/arquitectura_LSCh-MR.md`](docs/arquitectura_LSCh-MR.md) | El documento de arquitectura del sistema completo (las cuatro capas). |
+| [`docs/CONTEXTO_UNITY.md`](docs/CONTEXTO_UNITY.md) | Contexto del subsistema de presentación (Capa 4), que vive en otro repo. |
+| [`docs/METRICAS_MVP.md`](docs/METRICAS_MVP.md) | Qué comando produce cada cifra del informe y qué declarar al reportarla. |
+| [`docs/ESTADO_ACTUAL.md`](docs/ESTADO_ACTUAL.md) | Fotografía del repo: qué está hecho, qué falta y por qué. |
+| [`docs/GLOSARIO_SENAS_MODELO.md`](docs/GLOSARIO_SENAS_MODELO.md) | Las 10 glosas del modelo, su significado y un vídeo de referencia. |
+| [`docs/DECISION_PREPROCESAMIENTO.md`](docs/DECISION_PREPROCESAMIENTO.md) | Por qué el preprocesamiento es propio y no reutilizado. |
+| [`docs/CONTEXTO_PROYECTO.md`](docs/CONTEXTO_PROYECTO.md) | El diseño: casos de uso, secciones y modelo de datos. |
 | [`NOTICE.md`](NOTICE.md) | Atribución del corpus y herencia de licencias. |
-| [`protocolo/PROTOCOLO_TSR.md`](protocolo/PROTOCOLO_TSR.md) | Guion del escenario de ventanilla para las pruebas con usuarios. |
+| [`docs/PROTOCOLO_TSR.md`](docs/PROTOCOLO_TSR.md) | Guion del escenario de ventanilla para las pruebas con usuarios. |
 | [`integracion/unity/README.md`](integracion/unity/README.md) | Cableado de la instrumentación C# de latencia y FPS. |
 
 ### Scripts de línea de comandos
 
 | Script | Qué hace |
 |---|---|
-| `descargar_modelo.py` | Descarga `hand_landmarker.task`. |
-| `extraer_lote.py` | Extracción de keypoints por lotes sobre una carpeta de vídeos. |
-| `extraer_keypoints.py` | Extracción desde webcam o un vídeo suelto. |
-| `grabar_corpus.py` | Grabación de corpus propio (`--senante`, que va dentro del `sample_id`). |
-| `build_dataset.py` | CSV crudo → dataset normalizado `.npz`. |
-| `entrenar.py` | Entrenamiento y validación cruzada. |
-| `exportar_onnx.py` | Exportación a ONNX + validación de operadores para Sentis. |
-| `demo_vivo.py` | Demo end-to-end en PC (CU-01/CU-03). |
-| `diagnostico_captura.py` | Diagnóstico de captura: luz y cámara contra throughput. |
-| `evaluar_modelo.py` | Métrica 1: accuracy y matriz de confusión. |
-| `evaluar_segmentacion.py` | Prueba previa: límites de seña del `RestStateDetector`. |
-| `calcular_tsr.py` | Métrica 4: task success rate con intervalo de Wilson. |
-| `reproducir_metricas.py` | Las cuatro evaluaciones del informe de una vez. |
-| `verificar_artefactos.py` | Comprueba que `modelo.onnx`, `labels.json` y los vectores dorados siguen alineados entre sí. Corre en CI. |
-| `generar_vectores_dorados.py` | Casos dorados de la Capa 2 para el port a C#. |
-| `generar_secuencia_dorada.py` | Casos dorados de la Capa 1 + 2 sobre una seña real. |
+| `scripts/descargar_modelo.py` | Descarga `hand_landmarker.task`. |
+| `scripts/extraer_lote.py` | Extracción de keypoints por lotes sobre una carpeta de vídeos. |
+| `scripts/extraer_keypoints.py` | Extracción desde webcam o un vídeo suelto. |
+| `scripts/grabar_corpus.py` | Grabación de corpus propio (`--senante`, que va dentro del `sample_id`). |
+| `scripts/build_dataset.py` | CSV crudo → dataset normalizado `.npz`. |
+| `scripts/entrenar.py` | Entrenamiento y validación cruzada. |
+| `scripts/exportar_onnx.py` | Exportación a ONNX + validación de operadores para Sentis. |
+| `scripts/demo_vivo.py` | Demo end-to-end en PC (CU-01/CU-03). |
+| `scripts/diagnostico_captura.py` | Diagnóstico de captura: luz y cámara contra throughput. |
+| `scripts/evaluar_modelo.py` | Métrica 1: accuracy y matriz de confusión. |
+| `scripts/evaluar_segmentacion.py` | Prueba previa: límites de seña del `RestStateDetector`. |
+| `scripts/calcular_tsr.py` | Métrica 4: task success rate con intervalo de Wilson. |
+| `scripts/reproducir_metricas.py` | Las cuatro evaluaciones del informe de una vez. |
+| `scripts/verificar_artefactos.py` | Comprueba que `modelo.onnx`, `labels.json` y los vectores dorados siguen alineados entre sí. Corre en CI. |
+| `scripts/generar_vectores_dorados.py` | Casos dorados de la Capa 2 para el port a C#. |
+| `scripts/generar_secuencia_dorada.py` | Casos dorados de la Capa 1 + 2 sobre una seña real. |
 
-`evaluar_modelo.py` y `calcular_tsr.py` devuelven **código de salida 2** cuando
+`scripts/evaluar_modelo.py` y `scripts/calcular_tsr.py` devuelven **código de salida 2** cuando
 la métrica no alcanza su umbral, para poder encadenarlos en un script de
 verificación sin parsear la salida.

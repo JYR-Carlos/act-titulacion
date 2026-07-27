@@ -1,7 +1,7 @@
 """
 Arquitectura del clasificador: Temporal Convolutional Network (TCN).
 
-Decisión consolidada (CONTEXTO_PROYECTO.md Sección 3): TCN. LSTM y Transformer
+Decisión consolidada (docs/CONTEXTO_PROYECTO.md Sección 3): TCN. LSTM y Transformer
 quedan descartados; NO reabrir sin decisión explícita del equipo.
 
 Diseño de la red (justificación del receptive field):

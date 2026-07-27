@@ -1,5 +1,5 @@
 """
-ModelExporter — Pipeline offline (CONTEXTO_PROYECTO.md Sección 10.2 / CU-02).
+ModelExporter — Pipeline offline (docs/CONTEXTO_PROYECTO.md Sección 10.2 / CU-02).
 
 Exporta el modelo Keras entrenado a ONNX (runtime consolidado: ONNX vía Unity
 Sentis — Sección 3) y valida que sus operadores sean compatibles con Sentis.
@@ -67,7 +67,7 @@ class ModelExporter:
         Al reexportar, el `.onnx` cambia de sha1 y eso **invalida el octavo
         caso de `integracion/vectores_dorados.json`**, que compara Sentis
         contra onnxruntime. Hay que regenerar los dorados y avisar al equipo de
-        Unity (INTEGRACION_UNITY.md §5).
+        Unity (docs/INTEGRACION_UNITY.md §5).
         """
         import tensorflow as tf
 
@@ -76,7 +76,7 @@ class ModelExporter:
         if not keras_path.exists():
             raise FileNotFoundError(
                 f"No existe el modelo Keras {keras_path}. Entrena primero "
-                "(python entrenar.py).")
+                "(python scripts/entrenar.py).")
 
         model = tf.keras.models.load_model(keras_path)
 

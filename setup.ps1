@@ -116,7 +116,7 @@ Ok "dependencias instaladas"
 # --------------------------------------------------------------------------- #
 Paso "Descargando el modelo HandLandmarker"
 
-& $VENV_PY (Join-Path $PSScriptRoot "descargar_modelo.py")
+& $VENV_PY (Join-Path $PSScriptRoot "scripts\descargar_modelo.py")
 if ($LASTEXITCODE -ne 0) {
     # No aborta: el pipeline offline (entrenar, exportar, métricas) funciona sin
     # el .task. Solo la captura lo necesita.
@@ -155,7 +155,7 @@ if ($pruebasOk) {
     Write-Host "ENTORNO LISTO." -ForegroundColor Green
     Write-Host ""
     Write-Host "  Activa el entorno:   .\.venv\Scripts\Activate.ps1"
-    Write-Host "  Corre la demo:       python demo_vivo.py --fuente 0"
+    Write-Host "  Corre la demo:       python scripts/demo_vivo.py --fuente 0"
     Write-Host ""
     Write-Host "  El modelo entrenado ya viene en el repo: no hace falta reentrenar."
     exit 0

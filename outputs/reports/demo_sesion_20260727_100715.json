@@ -1,0 +1,387 @@
+{
+  "sesion": {
+    "inicio": "2026-07-27T10:04:07",
+    "duracion_s": 188.06,
+    "fuente": "0",
+    "conf_threshold": 0.9,
+    "modo_manos": "dominante"
+  },
+  "recursos": {
+    "n_muestras": 180,
+    "duracion_s": 188.05,
+    "n_cpus_logicos": 12,
+    "cpu_pct_normalizado": {
+      "media": 12.8,
+      "min": 3.5,
+      "max": 46.0
+    },
+    "memoria_rss_mb": {
+      "media": 541.3,
+      "min": 509.0,
+      "max": 544.2
+    }
+  },
+  "captura": {
+    "fps_promedio_camara": 30.0,
+    "n_frames": 4027,
+    "n_frames_con_mano": 2866,
+    "tasa_deteccion_mano": 0.712,
+    "luminancia_media": 133.0,
+    "umbral_luminancia": 60.0,
+    "escena_oscura": false,
+    "realce_poca_luz": false
+  },
+  "latencia_e2e_ms": {
+    "umbral_ms": 500.0,
+    "n": 30,
+    "media_ms": 325.22,
+    "min_ms": 263.52,
+    "max_ms": 372.89,
+    "p95_ms": 341.9,
+    "n_excede_umbral": 0,
+    "pct_excede_umbral": 0.0
+  },
+  "reconocimiento": {
+    "n_clasificadas": 30,
+    "n_en_vocabulario": 10,
+    "n_fuera_vocabulario": 20,
+    "n_descartadas_tracking": 25,
+    "conteo_por_glosa": {
+      "Aceptar": 7,
+      "Ayuda": 2,
+      "Llamar": 1
+    }
+  },
+  "historial_senas": [
+    {
+      "t_s": 19.92,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.5445,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.67,
+      "retardo_segmentacion_ms": 284.48,
+      "latencia_e2e_ms": 316.16,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 23.89,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8739,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 2.6,
+      "retardo_segmentacion_ms": 277.86,
+      "latencia_e2e_ms": 316.96,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 27.83,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.7401,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.53,
+      "retardo_segmentacion_ms": 284.48,
+      "latencia_e2e_ms": 318.92,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 31.48,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8171,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.12,
+      "retardo_segmentacion_ms": 290.69,
+      "latencia_e2e_ms": 319.27,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 39.02,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8823,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.63,
+      "retardo_segmentacion_ms": 290.9,
+      "latencia_e2e_ms": 325.89,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 43.36,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.6508,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.35,
+      "retardo_segmentacion_ms": 294.21,
+      "latencia_e2e_ms": 326.65,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 52.03,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.5385,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.97,
+      "retardo_segmentacion_ms": 297.52,
+      "latencia_e2e_ms": 339.17,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 64.45,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.6351,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.31,
+      "retardo_segmentacion_ms": 294.21,
+      "latencia_e2e_ms": 325.17,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 68.52,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.5748,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.21,
+      "retardo_segmentacion_ms": 297.52,
+      "latencia_e2e_ms": 332.98,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 71.73,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.5914,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.11,
+      "retardo_segmentacion_ms": 290.69,
+      "latencia_e2e_ms": 323.72,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 80.89,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8878,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.58,
+      "retardo_segmentacion_ms": 294.0,
+      "latencia_e2e_ms": 328.2,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 85.89,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9395,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.5,
+      "retardo_segmentacion_ms": 290.9,
+      "latencia_e2e_ms": 325.96,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 89.61,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.7487,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.31,
+      "retardo_segmentacion_ms": 290.69,
+      "latencia_e2e_ms": 324.48,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 105.2,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.7202,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.13,
+      "retardo_segmentacion_ms": 236.28,
+      "latencia_e2e_ms": 263.52,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 112.22,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.6876,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.62,
+      "retardo_segmentacion_ms": 297.31,
+      "latencia_e2e_ms": 329.69,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 115.59,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9995,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.08,
+      "retardo_segmentacion_ms": 291.1,
+      "latencia_e2e_ms": 322.78,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 120.33,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8103,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.91,
+      "retardo_segmentacion_ms": 297.72,
+      "latencia_e2e_ms": 333.5,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 122.81,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.6624,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.18,
+      "retardo_segmentacion_ms": 280.97,
+      "latencia_e2e_ms": 315.22,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 124.83,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9846,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.91,
+      "retardo_segmentacion_ms": 284.48,
+      "latencia_e2e_ms": 318.07,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 125.86,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9956,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.16,
+      "retardo_segmentacion_ms": 336.21,
+      "latencia_e2e_ms": 372.89,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 128.77,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.7299,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.61,
+      "retardo_segmentacion_ms": 290.9,
+      "latencia_e2e_ms": 326.41,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 143.22,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8864,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 3.71,
+      "retardo_segmentacion_ms": 294.21,
+      "latencia_e2e_ms": 332.29,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 145.73,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9947,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.01,
+      "retardo_segmentacion_ms": 290.69,
+      "latencia_e2e_ms": 323.03,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 149.62,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9977,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.26,
+      "retardo_segmentacion_ms": 294.0,
+      "latencia_e2e_ms": 326.36,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 152.27,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 0.9139,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.11,
+      "retardo_segmentacion_ms": 297.1,
+      "latencia_e2e_ms": 330.45,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 159.39,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.2982,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.55,
+      "retardo_segmentacion_ms": 287.59,
+      "latencia_e2e_ms": 319.87,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 163.33,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8501,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.63,
+      "retardo_segmentacion_ms": 297.72,
+      "latencia_e2e_ms": 331.15,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 165.81,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 0.9998,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.39,
+      "retardo_segmentacion_ms": 287.59,
+      "latencia_e2e_ms": 321.8,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 169.64,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9904,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.32,
+      "retardo_segmentacion_ms": 287.59,
+      "latencia_e2e_ms": 321.95,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 171.05,
+      "label": "Call",
+      "label_es": "Llamar",
+      "conf": 0.9879,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.1,
+      "retardo_segmentacion_ms": 307.24,
+      "latencia_e2e_ms": 344.13,
+      "excede_umbral": false
+    }
+  ]
+}

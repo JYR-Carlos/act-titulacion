@@ -7,7 +7,7 @@ precisión y recall de esa detección.
 
 Funciones puras (solo numpy/estándar): el emparejamiento se puede testear sin
 detector, sin CSV y sin vídeo. El script que las usa es
-`evaluar_segmentacion.py`.
+`scripts/evaluar_segmentacion.py`.
 
 ---------------------------------------------------------------------------
 Cómo se cuenta un acierto
@@ -112,7 +112,7 @@ def _estadisticos_error(errores: list[int]) -> dict:
     El **sesgo** (media con signo) es más informativo que el error absoluto: un
     sesgo positivo sistemático en el fin significa que el detector cierra tarde,
     y eso se corrige bajando `REST_FRAMES_FIN` — es justo la palanca que
-    `ESTADO_ACTUAL.md` propone si la latencia sale corta.
+    `docs/ESTADO_ACTUAL.md` propone si la latencia sale corta.
     """
     if not errores:
         return {"n": 0}

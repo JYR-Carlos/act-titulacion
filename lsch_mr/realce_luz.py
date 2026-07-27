@@ -1,7 +1,7 @@
 """
 realce_luz — realce adaptativo de frames con poca luz (Capa 1, Captura).
 
-Motivación medida (`diagnostico_captura.py`, sesión "noche" del 2026-07-26):
+Motivación medida (`scripts/diagnostico_captura.py`, sesión "noche" del 2026-07-26):
 con luminancia media 10/255 y el 96% de los píxeles por debajo de 40, MediaPipe
 encuentra la palma en solo el 51% de los frames. No es que los keypoints salgan
 mal — cuando detecta, el score de handedness es 0.97: simplemente no encuentra
@@ -26,7 +26,7 @@ NO ES GRATIS Y NO ESTÁ ACTIVO POR DEFECTO
 El corpus LSA64 del que salió `modelo.onnx` se extrajo SIN realce (los vídeos
 están bien iluminados, `luminancia_media` los deja pasar sin tocar). Aplicarlo
 en servicio cambia la imagen que ve MediaPipe, así que es una decisión con el
-mismo perfil de riesgo que `running_mode` (INTEGRACION_UNITY.md sección 7) y va
+mismo perfil de riesgo que `running_mode` (docs/INTEGRACION_UNITY.md sección 7) y va
 detrás de un flag (`--realce`), no encendida de fábrica.
 
 El argumento a favor: en una escena oscura el realce ACERCA la entrada a la
@@ -35,8 +35,8 @@ de fallo que corrige es "no hay detección", no "detección desplazada". El
 argumento en contra: sube también el ruido del sensor, que con ganancia alta no
 es despreciable. Por eso la forma correcta de decidirlo es medirlo:
 
-    python diagnostico_captura.py --etiqueta noche
-    python diagnostico_captura.py --etiqueta noche-realce --realce
+    python scripts/diagnostico_captura.py --etiqueta noche
+    python scripts/diagnostico_captura.py --etiqueta noche-realce --realce
 
 y comparar `tasa_con_mano` y `racha_max_sin_mano` de los dos JSON. Más luz
 física sigue siendo mejor que cualquier realce: esto es la red de seguridad
@@ -51,7 +51,7 @@ import numpy as np
 
 # Luminancia media (gris 0..255) por encima de la cual NO se toca el frame: hay
 # luz suficiente y realzar solo agregaría ruido. Mismo corte que usa el
-# veredicto de `diagnostico_captura.py`, para que los números sean comparables.
+# veredicto de `scripts/diagnostico_captura.py`, para que los números sean comparables.
 UMBRAL_LUMINANCIA = 60.0
 
 # Luminancia media a la que se intenta llevar un frame oscuro. Por encima de
@@ -75,7 +75,7 @@ def luminancia_media(frame_bgr: np.ndarray, submuestreo: int = 4) -> float:
 
     `submuestreo` toma 1 de cada N píxeles por eje: a 640x480 con N=4 mide sobre
     160x120 y cuesta microsegundos, con un error irrelevante para decidir si la
-    escena está oscura. Es la misma métrica que reporta `diagnostico_captura.py`
+    escena está oscura. Es la misma métrica que reporta `scripts/diagnostico_captura.py`
     (ahí sin submuestrear, porque no corre en el bucle de la demo).
     """
     if submuestreo > 1:

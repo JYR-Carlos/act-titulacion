@@ -1,0 +1,609 @@
+{
+  "sesion": {
+    "inicio": "2026-07-27T09:45:39",
+    "duracion_s": 280.94,
+    "fuente": "0",
+    "conf_threshold": 0.9,
+    "modo_manos": "dominante"
+  },
+  "recursos": {
+    "n_muestras": 258,
+    "duracion_s": 280.88,
+    "n_cpus_logicos": 12,
+    "cpu_pct_normalizado": {
+      "media": 14.2,
+      "min": 3.4,
+      "max": 53.2
+    },
+    "memoria_rss_mb": {
+      "media": 543.9,
+      "min": 514.0,
+      "max": 547.8
+    }
+  },
+  "captura": {
+    "fps_promedio_camara": 29.0,
+    "n_frames": 5723,
+    "n_frames_con_mano": 4963,
+    "tasa_deteccion_mano": 0.867,
+    "luminancia_media": 131.6,
+    "umbral_luminancia": 60.0,
+    "escena_oscura": false,
+    "realce_poca_luz": false
+  },
+  "latencia_e2e_ms": {
+    "umbral_ms": 500.0,
+    "n": 50,
+    "media_ms": 312.79,
+    "min_ms": 233.73,
+    "max_ms": 417.77,
+    "p95_ms": 364.17,
+    "n_excede_umbral": 0,
+    "pct_excede_umbral": 0.0
+  },
+  "reconocimiento": {
+    "n_clasificadas": 50,
+    "n_en_vocabulario": 33,
+    "n_fuera_vocabulario": 17,
+    "n_descartadas_tracking": 31,
+    "conteo_por_glosa": {
+      "Ayuda": 10,
+      "Aceptar": 19,
+      "Apellido": 2,
+      "Aparecer": 1,
+      "Nombre": 1
+    }
+  },
+  "historial_senas": [
+    {
+      "t_s": 41.3,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.7811,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 24.48,
+      "retardo_segmentacion_ms": 274.76,
+      "latencia_e2e_ms": 333.48,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 44.47,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.7105,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.32,
+      "retardo_segmentacion_ms": 291.1,
+      "latencia_e2e_ms": 324.58,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 46.23,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 0.9945,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.95,
+      "retardo_segmentacion_ms": 303.93,
+      "latencia_e2e_ms": 339.4,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 47.44,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.4437,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.26,
+      "retardo_segmentacion_ms": 319.86,
+      "latencia_e2e_ms": 353.86,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 48.78,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 1.0,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 2.83,
+      "retardo_segmentacion_ms": 339.52,
+      "latencia_e2e_ms": 383.37,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 54.55,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 1.0,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 0.92,
+      "retardo_segmentacion_ms": 281.17,
+      "latencia_e2e_ms": 313.72,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 56.47,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 0.9232,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.07,
+      "retardo_segmentacion_ms": 307.03,
+      "latencia_e2e_ms": 342.42,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 60.38,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.5926,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 2.62,
+      "retardo_segmentacion_ms": 287.79,
+      "latencia_e2e_ms": 327.02,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 65.12,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8336,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 2.61,
+      "retardo_segmentacion_ms": 281.17,
+      "latencia_e2e_ms": 321.46,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 67.27,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9983,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.1,
+      "retardo_segmentacion_ms": 265.24,
+      "latencia_e2e_ms": 295.58,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 69.45,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9887,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.06,
+      "retardo_segmentacion_ms": 255.52,
+      "latencia_e2e_ms": 282.33,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 70.77,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 0.9997,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.34,
+      "retardo_segmentacion_ms": 281.17,
+      "latencia_e2e_ms": 320.23,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 72.78,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 1.0,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 2.08,
+      "retardo_segmentacion_ms": 216.62,
+      "latencia_e2e_ms": 244.98,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 84.73,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8838,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.36,
+      "retardo_segmentacion_ms": 265.03,
+      "latencia_e2e_ms": 298.06,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 87.86,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9962,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.26,
+      "retardo_segmentacion_ms": 278.07,
+      "latencia_e2e_ms": 317.55,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 91.3,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9672,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.73,
+      "retardo_segmentacion_ms": 278.07,
+      "latencia_e2e_ms": 317.7,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 93.11,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 0.9938,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.87,
+      "retardo_segmentacion_ms": 303.72,
+      "latencia_e2e_ms": 340.04,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 95.73,
+      "label": "Last_name",
+      "label_es": "Apellido",
+      "conf": 0.9997,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.0,
+      "retardo_segmentacion_ms": 281.17,
+      "latencia_e2e_ms": 319.08,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 104.44,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 0.9743,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 2.14,
+      "retardo_segmentacion_ms": 297.31,
+      "latencia_e2e_ms": 333.21,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 107.12,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.447,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.64,
+      "retardo_segmentacion_ms": 268.34,
+      "latencia_e2e_ms": 306.81,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 114.86,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 0.9612,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.24,
+      "retardo_segmentacion_ms": 232.76,
+      "latencia_e2e_ms": 254.66,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 123.78,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.6501,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.85,
+      "retardo_segmentacion_ms": 226.14,
+      "latencia_e2e_ms": 253.76,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 133.58,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9985,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.34,
+      "retardo_segmentacion_ms": 226.34,
+      "latencia_e2e_ms": 252.64,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 152.81,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8518,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 2.82,
+      "retardo_segmentacion_ms": 268.14,
+      "latencia_e2e_ms": 306.72,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 155.62,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9976,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.98,
+      "retardo_segmentacion_ms": 271.66,
+      "latencia_e2e_ms": 304.61,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 159.52,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9888,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.71,
+      "retardo_segmentacion_ms": 294.21,
+      "latencia_e2e_ms": 336.1,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 161.28,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9954,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.27,
+      "retardo_segmentacion_ms": 278.28,
+      "latencia_e2e_ms": 316.18,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 162.19,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.5311,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.54,
+      "retardo_segmentacion_ms": 307.03,
+      "latencia_e2e_ms": 348.25,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 166.77,
+      "label": "Appear",
+      "label_es": "Aparecer",
+      "conf": 0.9583,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.52,
+      "retardo_segmentacion_ms": 219.93,
+      "latencia_e2e_ms": 247.56,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 170.25,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.5324,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.21,
+      "retardo_segmentacion_ms": 210.21,
+      "latencia_e2e_ms": 233.73,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 172.72,
+      "label": "Help",
+      "label_es": "Ayuda",
+      "conf": 1.0,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.3,
+      "retardo_segmentacion_ms": 226.34,
+      "latencia_e2e_ms": 259.37,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 186.36,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9741,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.45,
+      "retardo_segmentacion_ms": 277.86,
+      "latencia_e2e_ms": 311.84,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 188.48,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9207,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.28,
+      "retardo_segmentacion_ms": 281.38,
+      "latencia_e2e_ms": 315.12,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 193.0,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.7904,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.51,
+      "retardo_segmentacion_ms": 284.48,
+      "latencia_e2e_ms": 317.05,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 214.14,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8099,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 3.8,
+      "retardo_segmentacion_ms": 281.38,
+      "latencia_e2e_ms": 313.41,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 219.66,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9998,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.33,
+      "retardo_segmentacion_ms": 284.48,
+      "latencia_e2e_ms": 317.39,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 223.92,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9605,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.05,
+      "retardo_segmentacion_ms": 268.14,
+      "latencia_e2e_ms": 301.02,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 232.7,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9801,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 0.89,
+      "retardo_segmentacion_ms": 252.21,
+      "latencia_e2e_ms": 285.27,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 236.12,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9995,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.2,
+      "retardo_segmentacion_ms": 261.93,
+      "latencia_e2e_ms": 294.45,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 239.38,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8709,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.07,
+      "retardo_segmentacion_ms": 268.34,
+      "latencia_e2e_ms": 302.31,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 241.33,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9955,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.21,
+      "retardo_segmentacion_ms": 271.45,
+      "latencia_e2e_ms": 295.23,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 248.19,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9828,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 2.15,
+      "retardo_segmentacion_ms": 287.59,
+      "latencia_e2e_ms": 323.88,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 250.86,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9208,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.01,
+      "retardo_segmentacion_ms": 274.76,
+      "latencia_e2e_ms": 316.2,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 253.8,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.6986,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.01,
+      "retardo_segmentacion_ms": 290.9,
+      "latencia_e2e_ms": 324.48,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 254.78,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.8669,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.69,
+      "retardo_segmentacion_ms": 333.1,
+      "latencia_e2e_ms": 372.61,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 255.66,
+      "label": "Name",
+      "label_es": "Nombre",
+      "conf": 0.9973,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.29,
+      "retardo_segmentacion_ms": 378.21,
+      "latencia_e2e_ms": 417.77,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 258.3,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9955,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.89,
+      "retardo_segmentacion_ms": 271.45,
+      "latencia_e2e_ms": 311.47,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 260.88,
+      "label": "Last_name",
+      "label_es": "Apellido",
+      "conf": 0.9882,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.62,
+      "retardo_segmentacion_ms": 284.48,
+      "latencia_e2e_ms": 324.27,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 265.17,
+      "label": "Accept",
+      "label_es": "Aceptar",
+      "conf": 0.9997,
+      "in_vocab": true,
+      "latencia_inferencia_ms": 1.79,
+      "retardo_segmentacion_ms": 290.9,
+      "latencia_e2e_ms": 338.23,
+      "excede_umbral": false
+    },
+    {
+      "t_s": 269.27,
+      "label": "<desconocida>",
+      "label_es": "<desconocida>",
+      "conf": 0.7503,
+      "in_vocab": false,
+      "latencia_inferencia_ms": 1.62,
+      "retardo_segmentacion_ms": 291.1,
+      "latencia_e2e_ms": 329.14,
+      "excede_umbral": false
+    }
+  ]
+}

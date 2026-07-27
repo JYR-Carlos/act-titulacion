@@ -2,7 +2,7 @@
 RestStateDetector — Capa 1 (Captura).
 
 Máquina de estados que segmenta el inicio/fin de una seña por reposo
-(CONTEXTO_PROYECTO.md Sección 8):
+(docs/CONTEXTO_PROYECTO.md Sección 8):
 
     Reposo --(manos salen de reposo)--> Capturando
     Capturando --(retorno sostenido a reposo, FIN)--> [secuencia despachada] --> Reposo
@@ -209,6 +209,6 @@ class RestStateDetector:
         """Frames acumulados de la seña en curso.
 
         Puede pasar de 60: el detector no corta la captura, la longitud fija la
-        impone el remuestreo posterior (INTEGRACION_UNITY.md §3C).
+        impone el remuestreo posterior (docs/INTEGRACION_UNITY.md §3C).
         """
         return len(self._buffer)

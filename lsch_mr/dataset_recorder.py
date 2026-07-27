@@ -1,5 +1,5 @@
 """
-DatasetRecorder — Pipeline offline (CONTEXTO_PROYECTO.md Sección 10.2 / CU-02).
+DatasetRecorder — Pipeline offline (docs/CONTEXTO_PROYECTO.md Sección 10.2 / CU-02).
 
 Graba y etiqueta el corpus a nivel de frame. Está pensado para el protocolo de
 grabación con el profesor de lengua de señas (sesiones limitadas): se graba en
@@ -7,7 +7,7 @@ TOMAS CONTINUAS y la segmentación de cada seña la hace automáticamente el
 `RestStateDetector` (Sección 10 del contexto, backlog inmediato).
 
 Flujo interactivo (ventana OpenCV):
-  * Teclas 0..9  -> selecciona la glosa activa (según Glosas_LSCh_Mappeadas.csv).
+  * Teclas 0..9  -> selecciona la glosa activa (según data/catalogos/Glosas_LSCh_Mappeadas.csv).
   * El operador hace la seña; al volver a reposo, la secuencia se guarda sola
     con la glosa activa.
   * Tecla ESC / q -> termina la sesión.
@@ -53,7 +53,7 @@ class DatasetRecorder:
         self.espejo = espejo
         self.salida_dir = Path(salida_dir)
         # El identificador del señante va DENTRO del sample_id porque es lo que
-        # permite después evaluar dejando señantes fuera (entrenar.py
+        # permite después evaluar dejando señantes fuera (scripts/entrenar.py
         # --cv-grupos 1). Si no se registra al grabar, esa evaluación deja de
         # ser posible y no hay forma de reconstruirlo a posteriori.
         self.senante = str(senante).strip().replace("_", "-") or config.SENANTE_POR_DEFECTO
@@ -77,7 +77,7 @@ class DatasetRecorder:
         # la palma en cada frame, así que da más jitter y más huecos— pero esa
         # inestabilidad la va a tener igual el runtime de Unity, que también va en
         # IMAGE. Grabar en un modo más benévolo que el de servicio maquillaría el
-        # problema en vez de resolverlo. Ver INTEGRACION_UNITY.md sección 7.
+        # problema en vez de resolverlo. Ver docs/INTEGRACION_UNITY.md sección 7.
         with FuenteVideo(self.fuente, espejo=self.espejo).abrir() as fuente, \
                 HandTrackingProvider(num_hands=2, running_mode="image") as provider, \
                 EscritorCSV(csv_path) as escritor:

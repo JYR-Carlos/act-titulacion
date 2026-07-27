@@ -155,7 +155,7 @@ def test_demasiados_grupos_aborta_salvo_con_forzar():
 def test_el_contador_de_grabar_corpus_no_compite_como_candidato():
     """`s01_0001`: el campo 2 es un contador global, no un rival del campo 1.
 
-    Es la convención de `grabar_corpus.py`. Si la heurística del campo dominado
+    Es la convención de `scripts/grabar_corpus.py`. Si la heurística del campo dominado
     lo tomara por un candidato mejor, rechazaría el agrupamiento correcto.
     """
     sids, y = [], []

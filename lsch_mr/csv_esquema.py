@@ -1,5 +1,5 @@
 """
-Esquema CSV del corpus (CONTEXTO_PROYECTO.md Sección 6).
+Esquema CSV del corpus (docs/CONTEXTO_PROYECTO.md Sección 6).
 
 Base documentada:  frame_idx, x0..x20, y0..y20, z0..z20, label
 Extensiones (punto abierto de una vs. dos manos): se escribe UNA FILA POR MANO
